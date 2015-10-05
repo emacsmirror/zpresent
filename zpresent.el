@@ -17,7 +17,6 @@
 (defvar *zpresent-position* 0
   "The current slide position.")
 
-
 (defun zpresent ()
   "Present the current .org file."
   (interactive)
@@ -27,12 +26,14 @@
   (setq *zpresent-position* -1)
   (zpresent-next-slide))
 
+(defface zpresent-h1 '((t . (:height 2.0))) "Face for titles.")
+
 (defun zpresent-get-slides (text)
   "Get slides from TEXT."
   (split-string text
                 (regexp-quote "\n* ")
                 t
-                (regezp-quote "* ")))
+                (regexp-quote "* ")))
 
 (defun zpresent-next-slide ()
   "Move to the next slide."
@@ -56,8 +57,12 @@
   (switch-to-buffer "zpresentation")
   (let ((inhibit-read-only t))
     (erase-buffer)
-    (insert "\n")
-    (insert text)))
+    (insert "\n        ")
+    (insert text)
+    (let ((overlay
+           (make-overlay (save-excursion (beginning-of-line) (point))
+                         (point))))
+      (overlay-put overlay 'face 'zpresent-h1))))
 
 (provide 'zpresent)
 
