@@ -48,9 +48,11 @@
                (chars-in-title (length title))
                (chars-to-add (truncate (- chars-in-line chars-in-title)
                                        2)))
-          (push (propertize (format "%s%s" (make-string chars-to-add ?\s) title)
-                            'face
-                            'zpresent-h1)
+          (push (format "%s%s"
+                        (propertize (format "%s%s" (make-string chars-to-add ?\s) title)
+                             'face
+                             'zpresent-h1)
+                        "\n\n")
                 built-up-slide))
         ;; (propertize (format "%s%s" (make-string chars-to-add ?\s) text) 'face 'zpresent-h1)
         (push (string-join (reverse built-up-slide) "\n")
