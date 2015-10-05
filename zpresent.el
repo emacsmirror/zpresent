@@ -97,8 +97,9 @@ This should eventually be replaced by just getting the faces programatically.")
   (let* ((chars-in-line (/ (window-width)
                            (face-attribute 'zpresent-h1 :height)))
          (chars-in-title (length title))
-         (chars-to-add (truncate (- chars-in-line chars-in-title)
-                                 2)))
+         (chars-to-add (max 0
+                            (truncate (- chars-in-line chars-in-title)
+                                      2))))
     (format "%s%s" (make-string chars-to-add ?\s) title)))
 
 (defun zpresent-next-slide ()
