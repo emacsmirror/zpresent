@@ -20,8 +20,11 @@
 (defun zpresent ()
   "Present the current .org file."
   (interactive)
+
   (setq *zpresent-slides* (zpresent-get-slides (buffer-substring 1 (buffer-size))))
+
   (switch-to-buffer "zpresentation")
+  (font-lock-mode 0)
   (zpresent-mode)
   (setq *zpresent-position* -1)
   (zpresent-next-slide))
@@ -58,11 +61,7 @@
   (let ((inhibit-read-only t))
     (erase-buffer)
     (insert "\n        ")
-    (insert text)
-    (let ((overlay
-           (make-overlay (save-excursion (beginning-of-line) (point))
-                         (point))))
-      (overlay-put overlay 'face 'zpresent-h1))))
+    (insert (propertize text 'face 'zpresent-h1))))
 
 (provide 'zpresent)
 
