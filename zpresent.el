@@ -35,7 +35,7 @@
   "Move to the next slide."
   (interactive)
   (when (< *zpresent-position*
-           (length *zpresent-slides*))
+           (1- (length *zpresent-slides*)))
       (cl-incf *zpresent-position*)
       (zpresent-slide (elt *zpresent-slides* *zpresent-position*))))
 
