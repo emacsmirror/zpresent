@@ -33,10 +33,24 @@
 
 (defun zpresent-get-slides (text)
   "Get slides from TEXT."
-  (split-string text
-                (regexp-quote "\n* ")
-                t
-                (regexp-quote "* ")))
+  (let ((complete-slides (split-string text
+                                       (regexp-quote "\n* ")
+                                       t
+                                       (regexp-quote "* ")))
+        (slides nil))
+    (dolist (slide complete-slides)
+      (let* ((all-lines (split-string slide "\n"))
+             (first-line (pop all-lines))
+             (built-up-slide nil))
+        (push first-line built-up-slide)
+        (push first-line slides)
+
+        (dolist (next-line all-lines)
+          (push next-line
+                built-up-slide)
+          (push (string-join (reverse built-up-slide) "\n")
+                slides))))
+    (reverse slides)))
 
 (defun zpresent-next-slide ()
   "Move to the next slide."
