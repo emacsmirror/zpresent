@@ -29,7 +29,8 @@
   (setq *zpresent-position* -1)
   (zpresent-next-slide))
 
-(defface zpresent-h1 '((t . (:height 2.0))) "Face for titles.")
+(defface zpresent-h1 '((t . (:height 4.0))) "Face for titles.")
+(defface zpresent-body '((t . (:height 2.66))) "Face for the body.")
 
 (defun zpresent-get-slides (text)
   "Get slides from TEXT."
