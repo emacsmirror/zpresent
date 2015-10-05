@@ -29,7 +29,10 @@
 
 (defun zpresent-get-slides (text)
   "Get slides from TEXT."
-  '("first" "second" "third"))
+  (split-string text
+                (regexp-quote "\n* ")
+                t
+                (regezp-quote "* ")))
 
 (defun zpresent-next-slide ()
   "Move to the next slide."
