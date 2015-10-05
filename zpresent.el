@@ -59,7 +59,7 @@
               slides)
 
         (dolist (next-line all-lines)
-          (push (propertize next-line 'face 'zpresent-body)
+          (push (propertize (format "  %s" next-line) 'face 'zpresent-body)
                 built-up-slide)
           (push (string-join (reverse built-up-slide) "\n")
                 slides))))
