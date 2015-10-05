@@ -88,7 +88,8 @@ This should eventually be replaced by just getting the faces programatically.")
         (dolist (next-line all-lines)
           (push (propertize (format "  %s" next-line) 'face 'zpresent-body)
                 built-up-slide)
-          (push (string-join (reverse built-up-slide) "\n")
+          (push (format "%s\n"
+                        (string-join (reverse built-up-slide) "\n"))
                 slides))))
     (reverse slides)))
 
