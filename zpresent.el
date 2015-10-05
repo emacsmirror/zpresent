@@ -60,8 +60,13 @@
   (switch-to-buffer "zpresentation")
   (let ((inhibit-read-only t))
     (erase-buffer)
-    (insert "\n        ")
-    (insert (propertize text 'face 'zpresent-h1))))
+    (insert "\n")
+    (let* ((chars-in-line (/ (window-width)
+                             (face-attribute 'zpresent-h1 :height)))
+           (chars-in-text (length text))
+           (chars-to-add (truncate (- chars-in-line chars-in-text)
+                                   2)))
+      (insert (propertize (format "%s%s" (make-string chars-to-add ?\s) text) 'face 'zpresent-h1)))))
 
 (provide 'zpresent)
 
