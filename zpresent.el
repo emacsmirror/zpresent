@@ -7,8 +7,12 @@
 (define-derived-mode zpresent-mode special-mode "zpresent-mode"
   (define-key zpresent-mode-map (kbd "n") #'zpresent-next-slide)
   (define-key zpresent-mode-map (kbd "C-n") #'zpresent-next-slide)
+  (define-key zpresent-mode-map (kbd "<right>") #'zpresent-next-slide)
+  (define-key zpresent-mode-map (kbd "<down>") #'zpresent-next-slide)
   (define-key zpresent-mode-map (kbd "p") #'zpresent-previous-slide)
   (define-key zpresent-mode-map (kbd "C-p") #'zpresent-previous-slide)
+  (define-key zpresent-mode-map (kbd "<left>") #'zpresent-previous-slide)
+  (define-key zpresent-mode-map (kbd "<up>") #'zpresent-previous-slide)
   (define-key zpresent-mode-map (kbd "C-+") #'zpresent-increase-text-size)
   (define-key zpresent-mode-map (kbd "+") #'zpresent-increase-text-size)
   (define-key zpresent-mode-map (kbd "C-=") #'zpresent-increase-text-size)
