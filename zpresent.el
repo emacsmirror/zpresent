@@ -98,6 +98,16 @@ This should eventually be replaced by just getting the faces programatically.")
                 slides))))
     (reverse slides)))
 
+(defun create-slides-from-block (block)
+  "Convert BLOCK into a list of slides."
+  (let ((slides nil)
+        (title (org-element-property :TITLE block)))
+    (let ((cur-slide (make-hash-table)))
+      (when title
+        (puthash 'title title cur-slide))
+      (push cur-slide slides))
+    (reverse slides)))
+
 
 (defun zpresent-format-title (title)
   "Format TITLE appropriately, including padding and applying the face."
