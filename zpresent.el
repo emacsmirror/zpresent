@@ -33,6 +33,9 @@
 
 This is used when we have to re-format everything.")
 
+(defvar *zpresent-source* nil
+  "The original org structure for the presentation.")
+
 (defvar *zpresent-position* 0
   "The current slide position.")
 
@@ -57,6 +60,7 @@ This should eventually be replaced by just getting the faces programatically.")
   (interactive)
 
   (setq *zpresent-source-text* (buffer-substring 1 (buffer-size)))
+  (setq *zpresent-source* (org-element-parse-buffer))
   (setq *zpresent-position* 0)
 
   (zpresent-reformat)
@@ -77,13 +81,10 @@ This should eventually be replaced by just getting the faces programatically.")
         (slides nil))
     (dolist (slide complete-slides)
       (let* ((all-lines (split-string slide "\n"))
-             (title (zpresent-pad-title (pop all-lines)))
+             (title (zpresent-format-title (pop all-lines)))
              (built-up-slide nil))
-        (push (format "%s%s"
-                      (propertize title
-                                  'face
-                                  'zpresent-h1)
-                      "\n\n")
+        (push (format "%s\n\n"
+                      title)
               built-up-slide)
 
         (push (string-join (reverse built-up-slide) "\n")
@@ -97,15 +98,19 @@ This should eventually be replaced by just getting the faces programatically.")
                 slides))))
     (reverse slides)))
 
-(defun zpresent-pad-title (title)
-  "Pad TITLE with appropriate spaces."
+
+(defun zpresent-format-title (title)
+  "Format TITLE appropriately, including padding and applying the face."
   (let* ((chars-in-line (/ (window-width)
                            (face-attribute 'zpresent-h1 :height)))
          (chars-in-title (length title))
          (chars-to-add (max 0
                             (truncate (- chars-in-line chars-in-title)
                                       2))))
-    (format "%s%s" (make-string chars-to-add ?\s) title)))
+    (format "%s\n\n"
+            (propertize (format "%s%s" (make-string chars-to-add ?\s) title)
+                        'face
+                        'zpresent-h1))))
 
 (defun zpresent-next-slide ()
   "Move to the next slide."
