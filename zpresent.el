@@ -22,6 +22,7 @@
 
 
 ;;;; Requires:
+(require 'org-element)
 (require 'subr-x)
 
 ;;;; Variables:
