@@ -74,11 +74,11 @@ This should eventually be replaced by just getting the faces programatically.")
 (defun zpresent-create-slides-from-block (block)
   "Convert BLOCK into a list of slides."
   (let ((slides nil)
-        (title (org-element-property :TITLE block)))
+        (title (or (org-element-property :TITLE block)
+                   (org-element-property :raw-value block))))
     (let ((cur-slide (make-hash-table)))
       (when title
-        ;;zck default title to name of headline
-        ;;or something for multi-line headlines
+        ;;zck do something for multi-line headlines
         ;;maybe automatically break it at 1/3 of width?
         (puthash 'title title cur-slide))
       ;;zck add body of slide
