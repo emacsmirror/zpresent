@@ -28,11 +28,6 @@
 (defvar *zpresent-slides* nil
   "The slides for the current presentation.")
 
-(defvar *zpresent-source-text* nil
-  "The original text being presented.
-
-This is used when we have to re-format everything.")
-
 (defvar *zpresent-source* nil
   "The original org structure for the presentation.")
 
@@ -59,51 +54,32 @@ This should eventually be replaced by just getting the faces programatically.")
   "Present the current .org file."
   (interactive)
 
-  (setq *zpresent-source-text* (buffer-substring 1 (buffer-size)))
   (setq *zpresent-source* (org-element-parse-buffer))
   (setq *zpresent-position* 0)
-
-  (zpresent-reformat)
-
+  (setq *zpresent-slides* (zpresent-format *zpresent-source*))
 
   (switch-to-buffer "zpresentation")
   (font-lock-mode 0)
   (zpresent-mode)
-  (setq *zpresent-position* -1)
-  (zpresent-next-slide))
 
-(defun zpresent-get-slides (text)
-  "Get slides from TEXT."
-  (let ((complete-slides (split-string text
-                                       (regexp-quote "\n* ")
-                                       t
-                                       (regexp-quote "* ")))
-        (slides nil))
-    (dolist (slide complete-slides)
-      (let* ((all-lines (split-string slide "\n"))
-             (title (zpresent-format-title (pop all-lines)))
-             (built-up-slide nil))
-        (push (format "%s\n\n"
-                      title)
-              built-up-slide)
+  (zpresent-redisplay))
 
-        (push (string-join (reverse built-up-slide) "\n")
-              slides)
+(defun zpresent-format (org-data)
+  "Convert ORG-DATA into the zpresentation list of slides."
+  (cl-mapcan #'identity
+             (org-element-map org-data
+                 'headline
+               #'zpresent-create-slides-from-block)))
 
-        (dolist (next-line all-lines)
-          (push (propertize (format "  %s" next-line) 'face 'zpresent-body)
-                built-up-slide)
-          (push (format "%s\n"
-                        (string-join (reverse built-up-slide) "\n"))
-                slides))))
-    (reverse slides)))
-
-(defun create-slides-from-block (block)
+(defun zpresent-create-slides-from-block (block)
   "Convert BLOCK into a list of slides."
   (let ((slides nil)
         (title (org-element-property :TITLE block)))
     (let ((cur-slide (make-hash-table)))
       (when title
+        ;;zck default title to name of headline
+        ;;or something for multi-line headlines
+        ;;maybe automatically break it at 1/3 of width?
         (puthash 'title title cur-slide))
       (push cur-slide slides))
     (reverse slides)))
@@ -138,14 +114,15 @@ This should eventually be replaced by just getting the faces programatically.")
       (cl-decf *zpresent-position*)
       (zpresent-slide (elt *zpresent-slides* *zpresent-position*))))
 
-(defun zpresent-slide (text)
-  "Present TEXT as a slide."
+(defun zpresent-slide (slide)
+  "Present SLIDE."
   (interactive)
   (switch-to-buffer "zpresentation")
   (let ((inhibit-read-only t))
     (erase-buffer)
     (insert "\n")
-    (insert text)))
+    (when (gethash 'title slide)
+      (insert (zpresent-format-title (gethash 'title slide))))))
 
 (defun zpresent-increase-text-size ()
   "Make everything bigger."
@@ -157,7 +134,7 @@ This should eventually be replaced by just getting the faces programatically.")
                         (* *zpresent-increase-multiplier*
                            (or (face-attribute face :height)
                                1))))
-  (zpresent-reformat))
+  (zpresent-redisplay))
 
 (defun zpresent-decrease-text-size ()
   "Make everything smaller."
@@ -169,12 +146,11 @@ This should eventually be replaced by just getting the faces programatically.")
                         (* *zpresent-decrease-multiplier*
                            (or (face-attribute face :height)
                                1))))
-  (zpresent-reformat))
+  (zpresent-redisplay))
 
-(defun zpresent-reformat ()
-  "Reformat the presentation with the current window size, fonts, etc."
+(defun zpresent-redisplay ()
+  "Redisplay the presentation at the current slide."
   (interactive)
-  (setq *zpresent-slides* (zpresent-get-slides *zpresent-source-text*))
   (zpresent-slide (elt *zpresent-slides* *zpresent-position*)))
 
 (provide 'zpresent)
