@@ -81,6 +81,7 @@ This should eventually be replaced by just getting the faces programatically.")
       (when title
         ;;zck do something for multi-line headlines
         ;;maybe automatically break it at 1/3 of width?
+        ;;add template: http://orgmode.org/manual/Easy-templates.html#Easy-templates
         (puthash 'title title cur-slide))
       ;;zck add body of slide
       (push cur-slide slides))
