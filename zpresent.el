@@ -82,7 +82,7 @@ This should eventually be replaced by just getting the faces programatically.")
         ;;zck do something for multi-line headlines
         ;;maybe automatically break it at 1/3 of width?
         ;;add template: http://orgmode.org/manual/Easy-templates.html#Easy-templates
-        (puthash 'title title cur-slide))
+        (puthash 'title (list title) cur-slide))
       ;;zck add body of slide
       (push cur-slide slides))
     (reverse slides)))
@@ -96,7 +96,7 @@ This should eventually be replaced by just getting the faces programatically.")
          (chars-to-add (max 0
                             (truncate (- chars-in-line chars-in-title)
                                       2))))
-    (format "%s\n\n"
+    (format "%s\n"
             (propertize (format "%s%s" (make-string chars-to-add ?\s) title)
                         'face
                         'zpresent-h1))))
@@ -125,7 +125,9 @@ This should eventually be replaced by just getting the faces programatically.")
     (erase-buffer)
     (insert "\n")
     (when (gethash 'title slide)
-      (insert (zpresent-format-title (gethash 'title slide))))))
+      (dolist (title-line (gethash 'title slide))
+        (insert (zpresent-format-title title-line)))
+      (insert "\n"))))
 
 (defun zpresent-increase-text-size ()
   "Make everything bigger."
