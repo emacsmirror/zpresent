@@ -156,6 +156,20 @@ This should eventually be replaced by just getting the faces programatically.")
   (interactive)
   (zpresent-slide (elt *zpresent-slides* *zpresent-position*)))
 
+(defun zpresent--test-presentation ()
+  "Start a presentation with dummy data."
+  (interactive)
+  (setq *zpresent-position* 0)
+  (setq *zpresent-slides*
+        (list #s(hash-table data (title ("one-line title")))
+              #s(hash-table data (title ("title on two" "lines")))))
+
+  (switch-to-buffer "zpresentation")
+  (font-lock-mode 0)
+  (zpresent-mode)
+
+  (zpresent-redisplay))
+
 (provide 'zpresent)
 
 ;;; zpresent.el ends here
