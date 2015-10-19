@@ -41,6 +41,9 @@
 (defconst *zpresent-decrease-multiplier* 0.66
   "The amount to decrease size when decreasing size.")
 
+(defconst *zpresent-long-title-cutoff* 0.66
+  "The fraction of the length of a line a title can be before it's considered long.")
+
 
 ;;;; Faces:
 (defface zpresent-h1 '((t . (:height 4.0))) "Face for titles." :group 'zpresent-faces)
@@ -88,18 +91,67 @@ This should eventually be replaced by just getting the faces programatically.")
     (reverse slides)))
 
 
-(defun zpresent-format-title (title)
-  "Format TITLE appropriately, including padding and applying the face."
+(defun zpresent-format-title (title &optional break-long-title)
+  "Format TITLE appropriately, including padding and applying the face.
+
+If BREAK-LONG-TITLE is t, and the title is more than
+*zpresent-long-title-cutoff* of the line, break it there,
+and print the rest of the title on the next line."
+  (if (zpresent-title-should-be-split title break-long-title)
+      (let* ((chars-in-line (/ (window-width)
+                                 (face-attribute 'zpresent-h1 :height)))
+             (chars-considered-long (truncate (* chars-in-line
+                                                 *zpresent-long-title-cutoff*)))
+             (title-lines (mapcar #'zpresent-format-title
+                                  (zpresent-split-at-space title chars-considered-long))))
+        (string-join title-lines))
+    (zpresent-format-title-single-line title)))
+
+(defun zpresent-title-should-be-split (title break-long-title)
+  "Return t if TITLE should be split, nil otherwise.
+
+BREAK-LONG-TITLE indicates whether we should split titles long enough."
   (let* ((chars-in-line (/ (window-width)
                            (face-attribute 'zpresent-h1 :height)))
          (chars-in-title (length title))
+         (chars-considered-long (truncate (* chars-in-line
+                                             *zpresent-long-title-cutoff*))))
+    (and break-long-title
+         (> chars-in-title
+            chars-considered-long))))
+
+(defun zpresent-format-title-single-line (title)
+  "Format TITLE as a title.
+
+Treat it as a single line, so won't try to break it for length."
+
+  (let* ((chars-in-line (/ (window-width)
+                           (face-attribute 'zpresent-h1 :height)))
+         (chars-in-title (length title))
+         (chars-considered-long (truncate (* chars-in-line
+                                             *zpresent-long-title-cutoff*)))
          (chars-to-add (max 0
                             (truncate (- chars-in-line chars-in-title)
                                       2))))
-    (format "%s\n"
-            (propertize (format "%s%s" (make-string chars-to-add ?\s) title)
-                        'face
-                        'zpresent-h1))))
+        (format "%s\n"
+                (propertize (format "%s%s" (make-string chars-to-add ?\s) title)
+                            'face
+                            'zpresent-h1))))
+
+
+(defun zpresent-split-at-space (string max-length)
+  "Split STRING at a space.  Each substring must be MAX-LENGTH or shorter.
+
+If there's a single word of length MAX-LENGTH, that word will be on a line by itself."
+  (if (<= (length string)
+          max-length)
+      (list (string-trim string))
+    (let ((pos-to-split-at (position ?\s string :from-end t :end max-length)))
+      (if pos-to-split-at
+          (cons (string-trim (substring string 0 pos-to-split-at))
+                (zpresent-split-at-space (string-trim (substring string pos-to-split-at)) max-length))
+        (cons (string-trim (substring string 0 max-length))
+              (zpresent-split-at-space (string-trim (substring string max-length)) max-length))))))
 
 (defun zpresent-next-slide ()
   "Move to the next slide."
@@ -125,8 +177,10 @@ This should eventually be replaced by just getting the faces programatically.")
     (erase-buffer)
     (insert "\n")
     (when (gethash 'title slide)
-      (dolist (title-line (gethash 'title slide))
-        (insert (zpresent-format-title title-line)))
+      (if (listp (gethash 'title slide))
+          (dolist (title-line (gethash 'title slide))
+            (insert (zpresent-format-title title-line)))
+        (insert (zpresent-format-title (gethash 'title slide) t)))
       (insert "\n"))))
 
 (defun zpresent-increase-text-size ()
@@ -158,13 +212,20 @@ This should eventually be replaced by just getting the faces programatically.")
   (interactive)
   (zpresent-slide (elt *zpresent-slides* *zpresent-position*)))
 
+;;the slide is stored as a hash. Key-value pairs are:
+;; key: title
+;; value: The title of the slide. If this is a string, automatically split it.
+;;    If this is a list, assume it's been manually split by the user,
+;;    so just use each line separately.
+
 (defun zpresent--test-presentation ()
   "Start a presentation with dummy data."
   (interactive)
   (setq *zpresent-position* 0)
   (setq *zpresent-slides*
-        (list #s(hash-table data (title ("one-line title")))
-              #s(hash-table data (title ("title on two" "lines")))))
+        (list #s(hash-table data (title "one-line title"))
+              #s(hash-table data (title ("title manually split" "onto three" "lines (this one is pretty gosh darn long, but it shouldn't be automatically split no matter how long it is.)")))
+              #s(hash-table data (title "an automatically split really really really really really really really really really long title"))))
 
   (switch-to-buffer "zpresentation")
   (font-lock-mode 0)
