@@ -138,6 +138,12 @@ Treat it as a single line, so won't try to break it for length."
                             'face
                             'zpresent-h1))))
 
+(defun zpresent-format-body (body-line)
+  "Format BODY-LINE appropriately for the body."
+  (propertize body-line
+              'face
+              'zpresent-body))
+
 
 (defun zpresent-split-at-space (string max-length)
   "Split STRING at a space.  Each substring must be MAX-LENGTH or shorter.
@@ -181,7 +187,10 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
           (dolist (title-line (gethash 'title slide))
             (insert (zpresent-format-title title-line)))
         (insert (zpresent-format-title (gethash 'title slide) t)))
-      (insert "\n"))))
+      (insert "\n"))
+    (when (gethash 'body slide)
+      (dolist (body-line (gethash 'body slide))
+        (insert (zpresent-format-body body-line))))))
 
 (defun zpresent-increase-text-size ()
   "Make everything bigger."
@@ -217,13 +226,15 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
 ;; value: The title of the slide. If this is a string, automatically split it.
 ;;    If this is a list, assume it's been manually split by the user,
 ;;    so just use each line separately.
+;; key: body
+;; value: A list of the lines in the body of the slide.
 
 (defun zpresent--test-presentation ()
   "Start a presentation with dummy data."
   (interactive)
   (setq *zpresent-position* 0)
   (setq *zpresent-slides*
-        (list #s(hash-table data (title "one-line title"))
+        (list #s(hash-table data (title "one-line title" body ("body line 1" "body line 2")))
               #s(hash-table data (title ("title manually split" "onto three" "lines (this one is pretty gosh darn long, but it shouldn't be automatically split no matter how long it is.)")))
               #s(hash-table data (title "an automatically split really really really really really really really really really long title"))))
 
