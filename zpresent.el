@@ -140,7 +140,7 @@ Treat it as a single line, so won't try to break it for length."
 
 (defun zpresent-format-body (body-line)
   "Format BODY-LINE appropriately for the body."
-  (propertize body-line
+  (propertize (format "%s\n" body-line)
               'face
               'zpresent-body))
 
