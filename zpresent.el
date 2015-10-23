@@ -82,8 +82,6 @@ This should eventually be replaced by just getting the faces programatically.")
                    (org-element-property :raw-value block))))
     (let ((cur-slide (make-hash-table)))
       (when title
-        ;;zck do something for multi-line headlines
-        ;;maybe automatically break it at 1/3 of width?
         ;;add template: http://orgmode.org/manual/Easy-templates.html#Easy-templates
         (puthash 'title (list title) cur-slide))
       ;;zck add body of slide
