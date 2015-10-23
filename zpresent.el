@@ -91,29 +91,26 @@ This should eventually be replaced by just getting the faces programatically.")
     (reverse slides)))
 
 
-(defun zpresent-format-title (title &optional break-long-title)
+(defun zpresent-format-title (title chars-in-line &optional break-long-title)
   "Format TITLE appropriately, including padding and applying the face.
 
+Format the title for a line of CHARS-IN-LINE characters.
 If BREAK-LONG-TITLE is t, and the title is more than
 *zpresent-long-title-cutoff* of the line, break it there,
 and print the rest of the title on the next line."
-  (if (zpresent-title-should-be-split title break-long-title)
-      (let* ((chars-in-line (/ (window-width)
-                                 (face-attribute 'zpresent-h1 :height)))
-             (chars-considered-long (truncate (* chars-in-line
+  (if (zpresent-title-should-be-split title chars-in-line break-long-title)
+      (let* ((chars-considered-long (truncate (* chars-in-line
                                                  *zpresent-long-title-cutoff*)))
-             (title-lines (mapcar #'zpresent-format-title
+             (title-lines (mapcar (lambda (line) (zpresent-format-title line chars-in-line))
                                   (zpresent-split-at-space title chars-considered-long))))
         (string-join title-lines))
     (zpresent-format-title-single-line title)))
 
-(defun zpresent-title-should-be-split (title break-long-title)
-  "Return t if TITLE should be split, nil otherwise.
+(defun zpresent-title-should-be-split (title chars-in-line break-long-title)
+  "Return t if TITLE is too long for a line of length CHARS-IN-LINE, else nil.
 
-BREAK-LONG-TITLE indicates whether we should split titles long enough."
-  (let* ((chars-in-line (/ (window-width)
-                           (face-attribute 'zpresent-h1 :height)))
-         (chars-in-title (length title))
+BREAK-LONG-TITLE indicates whether we should split titles at all."
+  (let* ((chars-in-title (length title))
          (chars-considered-long (truncate (* chars-in-line
                                              *zpresent-long-title-cutoff*))))
     (and break-long-title
@@ -183,10 +180,12 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
     (erase-buffer)
     (insert "\n")
     (when (gethash 'title slide)
-      (if (listp (gethash 'title slide))
-          (dolist (title-line (gethash 'title slide))
-            (insert (zpresent-format-title title-line)))
-        (insert (zpresent-format-title (gethash 'title slide) t)))
+      (let ((chars-in-line (/ (window-width)
+                              (face-attribute 'zpresent-h1 :height))))
+        (if (listp (gethash 'title slide))
+            (dolist (title-line (gethash 'title slide))
+              (insert (zpresent-format-title title-line chars-in-line)))
+          (insert (zpresent-format-title (gethash 'title slide) chars-in-line t))))
       (insert "\n"))
     (when (gethash 'body slide)
       (dolist (body-line (gethash 'body slide))
