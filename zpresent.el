@@ -189,6 +189,7 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
   "Present SLIDE."
   (interactive)
   (switch-to-buffer "zpresentation")
+  (buffer-disable-undo "zpresentation")
   (let ((inhibit-read-only t))
     (erase-buffer)
     (insert "\n")
