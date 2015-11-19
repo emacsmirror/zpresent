@@ -88,7 +88,10 @@ This should eventually be replaced by just getting the faces programatically.")
   (cl-mapcan #'identity
              (org-element-map org-data
                  'headline
-               #'zpresent-create-slides-from-block)))
+               #'zpresent-create-slides-from-block
+               nil
+               nil
+               'headline)))
 
 (defun zpresent-create-slides-from-block (block)
   "Convert BLOCK into a list of slides."
