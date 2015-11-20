@@ -102,6 +102,11 @@
         ;;add template: http://orgmode.org/manual/Easy-templates.html#Easy-templates
         (puthash 'title (list title) cur-slide))
       ;;zck add body of slide
+      ;;block seems to have a few things:
+      ;; initial 'headline
+      ;; :raw-value block -- ignore
+      ;; :section block for notes, dash list
+      ;; :headline for other headlines
       (push cur-slide slides))
     (reverse slides)))
 
