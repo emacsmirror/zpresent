@@ -61,12 +61,11 @@
 
 
 ;;;; Faces:
-(defface zpresent-h1 '((t . (:height 4.0))) "Face for titles." :group 'zpresent-faces)
-(defface zpresent-body '((t . (:height 2.66))) "Face for the body." :group 'zpresent-faces)
-
-(defvar *zpresent-faces* '(zpresent-h1 zpresent-body)
-  "A list of all the faces for this group.
-This should eventually be replaced by just getting the faces programatically.")
+;;zck make scaling function just change zpresent-base, not the faces in *zpresent-faces*.
+;;zck why doesn't this center properly anymore?
+(defface zpresent-base '((t . (:height 4.0))) "The base face, so we can manage changing sizes only by changing this face." :group 'zpresent-faces)
+(defface zpresent-h1 '((t . (:height 1.0 :inherit zpresent-base))) "Face for titles." :group 'zpresent-faces)
+(defface zpresent-body '((t . (:height 0.66 :inherit zpresent-base))) "Face for the body." :group 'zpresent-faces)
 
 ;;;; Actual code:
 (defun zpresent ()
@@ -211,25 +210,23 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
 (defun zpresent-increase-text-size ()
   "Make everything bigger."
   (interactive)
-  (dolist (face *zpresent-faces*)
-    (set-face-attribute face
-                        nil
-                        :height
-                        (* *zpresent-increase-multiplier*
-                           (or (face-attribute face :height)
-                               1))))
+  (set-face-attribute 'zpresent-base
+                      nil
+                      :height
+                      (* *zpresent-increase-multiplier*
+                         (or (face-attribute 'zpresent-base :height)
+                             1)))
   (zpresent-redisplay))
 
 (defun zpresent-decrease-text-size ()
   "Make everything smaller."
   (interactive)
-  (dolist (face *zpresent-faces*)
-    (set-face-attribute face
-                        nil
-                        :height
-                        (* *zpresent-decrease-multiplier*
-                           (or (face-attribute face :height)
-                               1))))
+  (set-face-attribute 'zpresent-base
+                      nil
+                      :height
+                      (* *zpresent-decrease-multiplier*
+                         (or (face-attribute 'zpresent-base :height)
+                             1)))
   (zpresent-redisplay))
 
 (defun zpresent-redisplay ()
