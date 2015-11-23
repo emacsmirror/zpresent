@@ -150,10 +150,10 @@ Treat it as a single line, so won't try to break it for length."
          (chars-to-add (max 0
                             (truncate (- chars-in-line chars-in-title)
                                       2))))
-        (format "%s\n"
-                (propertize (format "%s%s" (make-string chars-to-add ?\s) title)
-                            'face
-                            'zpresent-h1))))
+    (format "%s\n"
+            (propertize (format "%s%s" (make-string chars-to-add ?\s) title)
+                        'face
+                        'zpresent-h1))))
 
 (defun zpresent-format-body (body-line)
   "Format BODY-LINE appropriately for the body."
