@@ -145,8 +145,6 @@ Treat it as a single line, so won't try to break it for length."
   (let* ((chars-in-line (/ (window-width)
                            (face-attribute 'zpresent-h1 :height nil t)))
          (chars-in-title (length title))
-         (chars-considered-long (truncate (* chars-in-line
-                                             *zpresent-long-title-cutoff*)))
          (chars-to-add (max 0
                             (truncate (- chars-in-line chars-in-title)
                                       2))))
