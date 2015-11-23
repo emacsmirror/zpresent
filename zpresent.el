@@ -100,7 +100,7 @@
     (let ((cur-slide (make-hash-table)))
       (when title
         ;;add template: http://orgmode.org/manual/Easy-templates.html#Easy-templates
-        (puthash 'title (list title) cur-slide))
+        (puthash 'title title cur-slide))
       ;;zck add body of slide
       ;;block seems to have a few things:
       ;; initial 'headline
