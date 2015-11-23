@@ -143,7 +143,7 @@ BREAK-LONG-TITLE indicates whether we should split titles at all."
 Treat it as a single line, so won't try to break it for length."
 
   (let* ((chars-in-line (/ (window-width)
-                           (face-attribute 'zpresent-h1 :height)))
+                           (face-attribute 'zpresent-h1 :height nil t)))
          (chars-in-title (length title))
          (chars-considered-long (truncate (* chars-in-line
                                              *zpresent-long-title-cutoff*)))
@@ -202,7 +202,7 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
     (insert "\n")
     (when (gethash 'title slide)
       (let ((chars-in-line (/ (window-width)
-                              (face-attribute 'zpresent-h1 :height))))
+                              (face-attribute 'zpresent-h1 :height nil t))))
         (if (listp (gethash 'title slide))
             (dolist (title-line (gethash 'title slide))
               (insert (zpresent-format-title title-line chars-in-line)))
