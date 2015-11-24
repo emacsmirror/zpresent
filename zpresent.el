@@ -95,7 +95,7 @@
 (defun zpresent-create-slides-from-block (block)
   "Convert BLOCK into a list of slides."
   (let ((slides nil)
-        (title (or (org-element-property :TITLE block)
+        (title (or (org-element-property :title block)
                    (org-element-property :raw-value block))))
     (let ((cur-slide (make-hash-table)))
       (when title
