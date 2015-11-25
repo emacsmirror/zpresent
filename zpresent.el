@@ -101,14 +101,22 @@
       (when title
         ;;add template: http://orgmode.org/manual/Easy-templates.html#Easy-templates
         (puthash 'title title cur-slide))
+      (push (copy-hash-table cur-slide)
+            slides)
+
+      (let ((body nil))
       ;;zck add body of slide
       ;;block seems to have a few things:
       ;; initial 'headline
       ;; :raw-value block -- ignore
       ;; :section block for notes, dash list
-      ;; :headline for other headlines
-      (push cur-slide slides))
-    (reverse slides)))
+      ;; :headline for other headlines)
+        (dolist (child-block (org-element-map block org-element-all-elements #'identity nil nil 'headline))
+          (push (org-element-property :title child-block)
+                body)
+          (puthash 'body (reverse body) cur-slide)
+          (push (copy-hash-table cur-slide) slides)))
+    (reverse slides))))
 
 
 (defun zpresent-format-title (title chars-in-line &optional break-long-title)
