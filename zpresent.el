@@ -72,7 +72,7 @@
   "Present the current .org file."
   (interactive)
 
-  (setq *zpresent-source* (org-element-parse-buffer))
+  (setq *zpresent-source* (org-structure-buffer (current-buffer)))
   (setq *zpresent-position* 0)
   (setq *zpresent-slides* (zpresent-format *zpresent-source*))
 
@@ -82,42 +82,28 @@
 
   (zpresent-redisplay))
 
-(defun zpresent-format (org-data)
-  "Convert ORG-DATA into the zpresentation list of slides."
-  (cl-mapcan #'identity
-             (org-element-map org-data
-                 'headline
-               #'zpresent-create-slides-from-block
-               nil
-               nil
-               'headline)))
+(defun zpresent-format (org-structure)
+  "Convert an ORG-STRUCTURE into a list of slides."
 
-(defun zpresent-create-slides-from-block (block)
-  "Convert BLOCK into a list of slides."
+  (cl-mapcan #'zpresent-format-block
+             org-structure))
+
+(defun zpresent-format-block (org-block)
+  "Convert a single top level ORG-BLOCK into a list of slides."
+
   (let ((slides nil)
-        (title (or (org-element-property :title block)
-                   (org-element-property :raw-value block))))
-    (let ((cur-slide (make-hash-table)))
-      (when title
-        ;;add template: http://orgmode.org/manual/Easy-templates.html#Easy-templates
-        (puthash 'title title cur-slide))
-      (push (copy-hash-table cur-slide)
-            slides)
+        (current-slide (make-hash-table)))
+    (puthash 'title (gethash :text org-block) current-slide)
+    (push (copy-hash-table current-slide) slides)
 
-      (let ((body nil))
-      ;;zck add body of slide
-      ;;block seems to have a few things:
-      ;; initial 'headline
-      ;; :raw-value block -- ignore
-      ;; :section block for notes, dash list
-      ;; :headline for other headlines)
-        (dolist (child-block (org-element-map block org-element-all-elements #'identity nil nil 'headline))
-          (push (org-element-property :title child-block)
-                body)
-          (puthash 'body (reverse body) cur-slide)
-          (push (copy-hash-table cur-slide) slides)))
-    (reverse slides))))
+    (let ((body nil))
+      (dolist (child-block (gethash :children org-block))
+        (push (gethash :text child-block)
+              body)
+        (puthash 'body (reverse body) current-slide)
+        (push (copy-hash-table current-slide) slides)))
 
+    (reverse slides))) ;;zck eventually keywords? Or symbols? Who knows.
 
 (defun zpresent-format-title (title chars-in-line &optional break-long-title)
   "Format TITLE appropriately, including padding and applying the face.
