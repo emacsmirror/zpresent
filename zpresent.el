@@ -20,20 +20,20 @@
 ;;; Code:
 
 (define-derived-mode zpresent-mode special-mode "zpresent-mode"
-  (define-key zpresent-mode-map (kbd "n") #'zpresent-next-slide)
-  (define-key zpresent-mode-map (kbd "C-n") #'zpresent-next-slide)
-  (define-key zpresent-mode-map (kbd "<right>") #'zpresent-next-slide)
-  (define-key zpresent-mode-map (kbd "<down>") #'zpresent-next-slide)
-  (define-key zpresent-mode-map (kbd "p") #'zpresent-previous-slide)
-  (define-key zpresent-mode-map (kbd "C-p") #'zpresent-previous-slide)
-  (define-key zpresent-mode-map (kbd "<left>") #'zpresent-previous-slide)
-  (define-key zpresent-mode-map (kbd "<up>") #'zpresent-previous-slide)
-  (define-key zpresent-mode-map (kbd "C-+") #'zpresent-increase-text-size)
-  (define-key zpresent-mode-map (kbd "+") #'zpresent-increase-text-size)
-  (define-key zpresent-mode-map (kbd "C-=") #'zpresent-increase-text-size)
-  (define-key zpresent-mode-map (kbd "=") #'zpresent-increase-text-size)
-  (define-key zpresent-mode-map (kbd "C--") #'zpresent-decrease-text-size)
-  (define-key zpresent-mode-map (kbd "-") #'zpresent-decrease-text-size))
+  (define-key zpresent-mode-map (kbd "n") #'zpresent/next-slide)
+  (define-key zpresent-mode-map (kbd "C-n") #'zpresent/next-slide)
+  (define-key zpresent-mode-map (kbd "<right>") #'zpresent/next-slide)
+  (define-key zpresent-mode-map (kbd "<down>") #'zpresent/next-slide)
+  (define-key zpresent-mode-map (kbd "p") #'zpresent/previous-slide)
+  (define-key zpresent-mode-map (kbd "C-p") #'zpresent/previous-slide)
+  (define-key zpresent-mode-map (kbd "<left>") #'zpresent/previous-slide)
+  (define-key zpresent-mode-map (kbd "<up>") #'zpresent/previous-slide)
+  (define-key zpresent-mode-map (kbd "C-+") #'zpresent/increase-text-size)
+  (define-key zpresent-mode-map (kbd "+") #'zpresent/increase-text-size)
+  (define-key zpresent-mode-map (kbd "C-=") #'zpresent/increase-text-size)
+  (define-key zpresent-mode-map (kbd "=") #'zpresent/increase-text-size)
+  (define-key zpresent-mode-map (kbd "C--") #'zpresent/decrease-text-size)
+  (define-key zpresent-mode-map (kbd "-") #'zpresent/decrease-text-size))
 
 
 ;;;; Requires:
@@ -72,69 +72,88 @@
   "Present the current .org file."
   (interactive)
 
-  (setq *zpresent-source* (org-element-parse-buffer))
+  (setq *zpresent-source* (org-structure-buffer (current-buffer)))
   (setq *zpresent-position* 0)
-  (setq *zpresent-slides* (zpresent-format *zpresent-source*))
+  (setq *zpresent-slides* (zpresent/format *zpresent-source*))
 
   (switch-to-buffer "zpresentation")
   (font-lock-mode 0)
   (zpresent-mode)
 
-  (zpresent-redisplay))
+  (zpresent/redisplay))
 
-(defun zpresent-format (org-data)
-  "Convert ORG-DATA into the zpresentation list of slides."
-  (cl-mapcan #'identity
-             (org-element-map org-data
-                 'headline
-               #'zpresent-create-slides-from-block
-               nil
-               nil
-               'headline)))
+(defun zpresent/format (structure-list)
+  "Convert an STRUCTURE-LIST into a list of slides."
+  (cl-mapcan #'zpresent/format-recursively
+             structure-list))
 
-(defun zpresent-create-slides-from-block (block)
-  "Convert BLOCK into a list of slides."
-  (let ((slides nil)
-        (title (or (org-element-property :title block)
-                   (org-element-property :raw-value block))))
-    (let ((cur-slide (make-hash-table)))
-      (when title
-        ;;add template: http://orgmode.org/manual/Easy-templates.html#Easy-templates
-        (puthash 'title title cur-slide))
-      (push (copy-hash-table cur-slide)
-            slides)
+(defun zpresent/format-recursively (structure)
+  "Convert STRUCTURE into a list of slides."
+  (let* ((slide-so-far (zpresent/make-slide (gethash :text structure)))
+         (slides-so-far (list slide-so-far)))
+    (dolist (cur-child (gethash :children structure))
+      (setq slides-so-far
+            (append slides-so-far
+                    (zpresent/format-recursively-helper cur-child slide-so-far 1)))
+      (setq slide-so-far (car (last slides-so-far))))
+    slides-so-far))
 
-      (let ((body nil))
-      ;;zck add body of slide
-      ;;block seems to have a few things:
-      ;; initial 'headline
-      ;; :raw-value block -- ignore
-      ;; :section block for notes, dash list
-      ;; :headline for other headlines)
-        (dolist (child-block (org-element-map block org-element-all-elements #'identity nil nil 'headline))
-          (push (org-element-property :title child-block)
-                body)
-          (puthash 'body (reverse body) cur-slide)
-          (push (copy-hash-table cur-slide) slides)))
-    (reverse slides))))
+(defun zpresent/format-recursively-helper (structure slide-so-far level)
+  "Convert STRUCTURE into a list of slides.
 
+SLIDE-SO-FAR is the built-up slide to append text in the body to.
 
-(defun zpresent-format-title (title chars-in-line &optional break-long-title)
+STRUCTURE is at level LEVEL.  This is used for indentation.
+
+Return the list of slides."
+  (let* ((current-slide (zpresent/extend-slide slide-so-far (format "%s%s"
+                                                                    (make-string level ?\s)
+                                                                    (gethash :text structure))))
+         (slides-so-far (list current-slide)))
+    (dolist (cur-child (gethash :children structure))
+      (setq slides-so-far
+            (append slides-so-far
+                    (zpresent/format-recursively-helper cur-child current-slide (1+ level))))
+      (setq current-slide (car (last slides-so-far))))
+    slides-so-far))
+
+(defun zpresent/make-slide (title &optional body)
+  "Create the slide with title TITLE.
+
+If BODY is present, add it as the body of the slide.  Otherwise, the
+slide is created with an empty body."
+  (let ((slide (make-hash-table)))
+    (puthash 'title title slide)
+    (puthash 'body (if body (list body) nil) slide)
+    slide))
+
+(defun zpresent/extend-slide (slide additional-body-text)
+  "Extend SLIDE with ADDITIONAL-BODY-TEXT."
+  (let ((new-slide (copy-hash-table slide)))
+    (puthash 'body
+             (append (gethash 'body slide)
+                     (list additional-body-text))
+             new-slide)
+    new-slide))
+
+;;zck eventually keywords? Or symbols? Who knows.
+
+(defun zpresent/format-title (title chars-in-line &optional break-long-title)
   "Format TITLE appropriately, including padding and applying the face.
 
 Format the title for a line of CHARS-IN-LINE characters.
 If BREAK-LONG-TITLE is t, and the title is more than
 *zpresent-long-title-cutoff* of the line, break it there,
 and print the rest of the title on the next line."
-  (if (zpresent-title-should-be-split title chars-in-line break-long-title)
+  (if (zpresent/title-should-be-split title chars-in-line break-long-title)
       (let* ((chars-considered-long (truncate (* chars-in-line
                                                  *zpresent-long-title-cutoff*)))
-             (title-lines (mapcar (lambda (line) (zpresent-format-title line chars-in-line))
-                                  (zpresent-split-at-space title chars-considered-long))))
+             (title-lines (mapcar (lambda (line) (zpresent/format-title line chars-in-line))
+                                  (zpresent/split-at-space title chars-considered-long))))
         (string-join title-lines))
-    (zpresent-format-title-single-line title)))
+    (zpresent/format-title-single-line title)))
 
-(defun zpresent-title-should-be-split (title chars-in-line break-long-title)
+(defun zpresent/title-should-be-split (title chars-in-line break-long-title)
   "Return t if TITLE is too long for a line of length CHARS-IN-LINE, else nil.
 
 BREAK-LONG-TITLE indicates whether we should split titles at all."
@@ -145,7 +164,7 @@ BREAK-LONG-TITLE indicates whether we should split titles at all."
          (> chars-in-title
             chars-considered-long))))
 
-(defun zpresent-format-title-single-line (title)
+(defun zpresent/format-title-single-line (title)
   "Format TITLE as a title.
 
 Treat it as a single line, so won't try to break it for length."
@@ -161,14 +180,14 @@ Treat it as a single line, so won't try to break it for length."
                         'face
                         'zpresent-h1))))
 
-(defun zpresent-format-body (body-line)
+(defun zpresent/format-body (body-line)
   "Format BODY-LINE appropriately for the body."
   (propertize (format "%s\n" body-line)
               'face
               'zpresent-body))
 
 
-(defun zpresent-split-at-space (string max-length)
+(defun zpresent/split-at-space (string max-length)
   "Split STRING at a space.  Each substring must be MAX-LENGTH or shorter.
 
 If there's a single word of length MAX-LENGTH, that word will be on a line by itself."
@@ -178,27 +197,27 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
     (let ((pos-to-split-at (position ?\s string :from-end t :end max-length)))
       (if pos-to-split-at
           (cons (string-trim (substring string 0 pos-to-split-at))
-                (zpresent-split-at-space (string-trim (substring string pos-to-split-at)) max-length))
+                (zpresent/split-at-space (string-trim (substring string pos-to-split-at)) max-length))
         (cons (string-trim (substring string 0 max-length))
-              (zpresent-split-at-space (string-trim (substring string max-length)) max-length))))))
+              (zpresent/split-at-space (string-trim (substring string max-length)) max-length))))))
 
-(defun zpresent-next-slide ()
+(defun zpresent/next-slide ()
   "Move to the next slide."
   (interactive)
   (when (< *zpresent-position*
            (1- (length *zpresent-slides*)))
       (cl-incf *zpresent-position*)
-      (zpresent-slide (elt *zpresent-slides* *zpresent-position*))))
+      (zpresent/slide (elt *zpresent-slides* *zpresent-position*))))
 
-(defun zpresent-previous-slide ()
+(defun zpresent/previous-slide ()
   "Move to the previous slide."
   (interactive)
   (when (> *zpresent-position*
            0)
       (cl-decf *zpresent-position*)
-      (zpresent-slide (elt *zpresent-slides* *zpresent-position*))))
+      (zpresent/slide (elt *zpresent-slides* *zpresent-position*))))
 
-(defun zpresent-slide (slide)
+(defun zpresent/slide (slide)
   "Present SLIDE."
   (interactive)
   (switch-to-buffer "zpresentation")
@@ -211,14 +230,14 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
                               (face-attribute 'zpresent-h1 :height nil t))))
         (if (listp (gethash 'title slide))
             (dolist (title-line (gethash 'title slide))
-              (insert (zpresent-format-title title-line chars-in-line)))
-          (insert (zpresent-format-title (gethash 'title slide) chars-in-line t))))
+              (insert (zpresent/format-title title-line chars-in-line)))
+          (insert (zpresent/format-title (gethash 'title slide) chars-in-line t))))
       (insert "\n"))
     (when (gethash 'body slide)
       (dolist (body-line (gethash 'body slide))
-        (insert (zpresent-format-body body-line))))))
+        (insert (zpresent/format-body body-line))))))
 
-(defun zpresent-increase-text-size ()
+(defun zpresent/increase-text-size ()
   "Make everything bigger."
   (interactive)
   (set-face-attribute 'zpresent-base
@@ -227,9 +246,9 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
                       (* *zpresent-increase-multiplier*
                          (or (face-attribute 'zpresent-base :height)
                              1)))
-  (zpresent-redisplay))
+  (zpresent/redisplay))
 
-(defun zpresent-decrease-text-size ()
+(defun zpresent/decrease-text-size ()
   "Make everything smaller."
   (interactive)
   (set-face-attribute 'zpresent-base
@@ -238,12 +257,12 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
                       (* *zpresent-decrease-multiplier*
                          (or (face-attribute 'zpresent-base :height)
                              1)))
-  (zpresent-redisplay))
+  (zpresent/redisplay))
 
-(defun zpresent-redisplay ()
+(defun zpresent/redisplay ()
   "Redisplay the presentation at the current slide."
   (interactive)
-  (zpresent-slide (elt *zpresent-slides* *zpresent-position*)))
+  (zpresent/slide (elt *zpresent-slides* *zpresent-position*)))
 
 ;;the slide is stored as a hash. Key-value pairs are:
 ;; key: title
@@ -266,7 +285,7 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
   (font-lock-mode 0)
   (zpresent-mode)
 
-  (zpresent-redisplay))
+  (zpresent/redisplay))
 
 (provide 'zpresent)
 
