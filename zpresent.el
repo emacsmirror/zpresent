@@ -61,6 +61,9 @@
 (defconst *zpresent-long-title-cutoff* 0.66
   "The fraction of the length of a line a title can be before it's considered long.")
 
+(defvar *zpresent-end-slide-text* (list "" "" "Finis")
+  "The text to use on an end slide.  If nil, don't use an end slide.")
+
 
 ;;;; Faces:
 ;;zck make scaling function just change zpresent-base, not the faces in *zpresent-faces*.
@@ -86,8 +89,10 @@
 
 (defun zpresent/format (structure-list)
   "Convert an STRUCTURE-LIST into a list of slides."
-  (cl-mapcan #'zpresent/format-recursively
-             structure-list))
+  (append (cl-mapcan #'zpresent/format-recursively
+                     structure-list)
+          (when *zpresent-end-slide-text*
+            (list (zpresent/make-slide *zpresent-end-slide-text*)))))
 
 (defun zpresent/format-recursively (structure)
   "Convert STRUCTURE into a list of slides."
