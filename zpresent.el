@@ -201,6 +201,18 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
         (cons (string-trim (substring string 0 max-length))
               (zpresent/split-at-space (string-trim (substring string max-length)) max-length))))))
 
+(defun zpresent/first-slide ()
+  "Move to the first slide."
+  (interactive)
+  (setq *zpresent-position* 0)
+  (zpresent/slide (elt *zpresent-slides* *zpresent-position*)))
+
+(defun zpresent/last-slide ()
+  "Move to the last slide."
+  (interactive)
+  (setq *zpresent-position* (1- (length *zpresent-slides*)))
+  (zpresent/slide (elt *zpresent-slides* *zpresent-position*)))
+
 (defun zpresent/next-slide ()
   "Move to the next slide."
   (interactive)
