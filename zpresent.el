@@ -28,6 +28,8 @@
   (define-key zpresent-mode-map (kbd "C-p") #'zpresent/previous-slide)
   (define-key zpresent-mode-map (kbd "<left>") #'zpresent/previous-slide)
   (define-key zpresent-mode-map (kbd "<up>") #'zpresent/previous-slide)
+  (define-key zpresent-mode-map (kbd "<home>") #'zpresent/first-slide)
+  (define-key zpresent-mode-map (kbd "<end>") #'zpresent/last-slide)
   (define-key zpresent-mode-map (kbd "C-+") #'zpresent/increase-text-size)
   (define-key zpresent-mode-map (kbd "+") #'zpresent/increase-text-size)
   (define-key zpresent-mode-map (kbd "C-=") #'zpresent/increase-text-size)
