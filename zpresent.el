@@ -113,9 +113,7 @@ SLIDE-SO-FAR is the built-up slide to append text in the body to.
 STRUCTURE is at level LEVEL.  This is used for indentation.
 
 Return the list of slides."
-  (let* ((current-slide (zpresent/extend-slide slide-so-far (format "%s%s"
-                                                                    (make-string level ?\s)
-                                                                    (gethash :text structure))))
+  (let* ((current-slide (zpresent/extend-slide slide-so-far (zpresent/make-body-text structure level)))
          (slides-so-far (list current-slide)))
     (dolist (cur-child (gethash :children structure))
       (setq slides-so-far
@@ -123,6 +121,16 @@ Return the list of slides."
                     (zpresent/format-recursively-helper cur-child current-slide (1+ level))))
       (setq current-slide (car (last slides-so-far))))
     slides-so-far))
+
+(defun zpresent/make-body-text (structure level)
+  "Make the body text for STRUCTURE at level LEVEL."
+  (if (equal ?* (gethash :bullet-type structure))
+      (format " %s* %s"
+              (make-string (* (1- level) 2) ?\s)
+              (gethash :text structure))
+    (format " %s %s"
+            (make-string (* (1- level) 2) ?\s)
+            (gethash :text structure))))
 
 (defun zpresent/make-slide (title &optional body)
   "Create the slide with title TITLE.
