@@ -96,7 +96,7 @@
 
 (defun zpresent/format-recursively (structure)
   "Convert STRUCTURE into a list of slides."
-  (let* ((slide-so-far (zpresent/make-slide (gethash :text structure)))
+  (let* ((slide-so-far (zpresent/make-top-level-slide structure))
          (slides-so-far (list slide-so-far)))
     (dolist (cur-child (gethash :children structure))
       (setq slides-so-far
@@ -104,6 +104,16 @@
                     (zpresent/format-recursively-helper cur-child slide-so-far 1)))
       (setq slide-so-far (car (last slides-so-far))))
     slides-so-far))
+
+;;zck is the formatting of the result what we want?
+(defun zpresent/make-top-level-slide (structure)
+  "Make a top level slide from STRUCTURE."
+  (zpresent/make-slide
+   (if (gethash :body structure)
+       (append (list (gethash :text structure))
+               (split-string (gethash :body structure)
+                             "\n"))
+     (gethash :text structure))))
 
 (defun zpresent/format-recursively-helper (structure slide-so-far level)
   "Convert STRUCTURE into a list of slides.
