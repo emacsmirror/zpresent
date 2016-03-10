@@ -105,7 +105,6 @@
       (setq slide-so-far (car (last slides-so-far))))
     slides-so-far))
 
-;;zck is the formatting of the result what we want?
 (defun zpresent/make-top-level-slide (structure)
   "Make a top level slide from STRUCTURE."
   (zpresent/make-slide
