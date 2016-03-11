@@ -52,10 +52,10 @@
 (defvar *zpresent-position* 0
   "The current slide position.")
 
-(defconst *zpresent-increase-multiplier* 1.5
+(defconst *zpresent-increase-multiplier* 1.25
   "The amount to increase size when increasing size.")
 
-(defconst *zpresent-decrease-multiplier* 0.66
+(defconst *zpresent-decrease-multiplier* 0.8
   "The amount to decrease size when decreasing size.")
 
 (defconst *zpresent-long-title-cutoff* 0.66
