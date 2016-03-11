@@ -85,6 +85,8 @@
   (font-lock-mode 0)
   (zpresent-mode)
 
+  (visual-line-mode)
+
   (zpresent/redisplay))
 
 (defun zpresent/format (structure-list)
