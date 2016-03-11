@@ -137,13 +137,11 @@ Return the list of slides."
 
 (defun zpresent/make-body-text (structure level)
   "Make the body text for STRUCTURE at level LEVEL."
-  (if (equal ?* (gethash :bullet-type structure))
-      (format " %s* %s"
-              (make-string (* (1- level) 2) ?\s)
-              (gethash :text structure))
-    (format " %s %s"
-            (make-string (* (1- level) 2) ?\s)
-            (gethash :text structure))))
+  (format (if (equal ?* (gethash :bullet-type structure))
+              " %s* %s"
+            " %s %s")
+          (make-string (* (1- level) 2) ?\s)
+          (gethash :text structure)))
 
 (defun zpresent/make-slide (title &optional body)
   "Create the slide with title TITLE.
