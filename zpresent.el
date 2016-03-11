@@ -107,12 +107,16 @@
 
 (defun zpresent/make-top-level-slide (structure)
   "Make a top level slide from STRUCTURE."
-  (zpresent/make-slide
-   (if (gethash :body structure)
+  (zpresent/make-slide (zpresent/extract-current-text structure)))
+
+;;zck test how this interacts with indentation/centering, if it does
+(defun zpresent/extract-current-text (structure)
+  "Extracts the text that should go in the slide for STRUCTURE."
+  (if (gethash :body structure)
        (append (list (gethash :text structure))
                (split-string (gethash :body structure)
                              "\n"))
-     (gethash :text structure))))
+     (gethash :text structure)))
 
 (defun zpresent/format-recursively-helper (structure slide-so-far level)
   "Convert STRUCTURE into a list of slides.
@@ -122,7 +126,7 @@ SLIDE-SO-FAR is the built-up slide to append text in the body to.
 STRUCTURE is at level LEVEL.  This is used for indentation.
 
 Return the list of slides."
-  (let* ((current-slide (zpresent/extend-slide slide-so-far (zpresent/make-body-text structure level)))
+  (let* ((current-slide (zpresent/extend-slide slide-so-far structure level))
          (slides-so-far (list current-slide)))
     (dolist (cur-child (gethash :children structure))
       (setq slides-so-far
@@ -151,12 +155,12 @@ slide is created with an empty body."
     (puthash 'body (if body (list body) nil) slide)
     slide))
 
-(defun zpresent/extend-slide (slide additional-body-text)
-  "Extend SLIDE with ADDITIONAL-BODY-TEXT."
+(defun zpresent/extend-slide (slide structure level)
+   "Extend SLIDE with the contents of STRUCTURE, at level LEVEL."
   (let ((new-slide (copy-hash-table slide)))
     (puthash 'body
              (append (gethash 'body slide)
-                     (list additional-body-text))
+                     (list (zpresent/make-body-text structure level)))
              new-slide)
     new-slide))
 
