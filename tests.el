@@ -57,5 +57,30 @@
                    (gethash 'body new-slide)))))
 
 
+(ert-deftest extract-current-test/simple-headline ()
+  (should (equal "simple headline"
+                 (zpresent/extract-current-text (car (org-structure "* simple headline"))))))
+
+(ert-deftest extract-current-test/nested-headline ()
+  (should (equal "nested headline"
+                 (zpresent/extract-current-text (car (org-structure "** nested headline"))))))
+
+(ert-deftest extract-current-test/simple-headline-with-multiple-line-body ()
+  (should (equal (list "nested headline" "with body" "over multiple lines")
+                 (zpresent/extract-current-text (car (org-structure "** nested headline\nwith body\nover multiple lines"))))))
+
+(ert-deftest extract-current-test/simple-plain-list ()
+  (should (equal "simple plain list"
+                 (zpresent/extract-current-text (car (org-structure "- simple plain list"))))))
+
+(ert-deftest extract-current-test/nested-plain-list ()
+  (should (equal "nested plain list"
+                 (zpresent/extract-current-text (car (org-structure "  - nested plain list"))))))
+
+(ert-deftest extract-current-test/simple-plain-list-with-multiple-line-body ()
+  (should (equal (list "nested plain list" "with body" "over multiple lines")
+                 (zpresent/extract-current-text (car (org-structure "  - nested plain list\nwith body\nover multiple lines"))))))
+
+
 
 ;;; tests.el ends here
