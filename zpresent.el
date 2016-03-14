@@ -61,6 +61,8 @@
 (defconst *zpresent-long-title-cutoff* 0.66
   "The fraction of the length of a line a title can be before it's considered long.")
 
+(defvar *zpresent-bullet* "▸")
+
 
 ;;;; Faces:
 ;;zck make scaling function just change zpresent-base, not the faces in *zpresent-faces*.
@@ -134,10 +136,11 @@ Return the list of slides."
 
 (defun zpresent/make-body-text (structure level)
   "Make the body text for STRUCTURE at level LEVEL."
-  (cons (format (if (equal ?* (gethash :bullet-type structure))
-                      " %s▸ %s"
-                    " %s %s")
-                  (make-string (* (1- level) 2) ?\s)
+  (cons (format " %s%s %s"
+                (make-string (* (1- level) 2) ?\s)
+                  (if (equal ?* (gethash :bullet-type structure))
+                      *zpresent-bullet*
+                    "")
                   (gethash :text structure))
         (when (gethash :body structure)
           (mapcar (lambda (line)
