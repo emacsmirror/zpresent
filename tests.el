@@ -82,5 +82,22 @@
                  (zpresent/extract-current-text (car (org-structure "  - nested plain list\nwith body\nover multiple lines"))))))
 
 
+(ert-deftest make-body-text/simple-headline ()
+  (should (equal (list " ▸ headline")
+                 (zpresent/make-body-text (car (org-structure "* headline")) 1))))
+
+(ert-deftest make-body-text/indented-headline ()
+  (should (equal (list "   ▸ my headline")
+                 (zpresent/make-body-text (car (org-structure "** my headline")) 2))))
+
+(ert-deftest make-body-text/plain-list ()
+  (should (equal (list "  a plain list")
+                 (zpresent/make-body-text (car (org-structure "- a plain list")) 1))))
+
+(ert-deftest make-body-text/indented-plain-list ()
+  (should (equal (list "    in too deep")
+                 (zpresent/make-body-text (car (org-structure "  - in too deep")) 2))))
+
+
 
 ;;; tests.el ends here
