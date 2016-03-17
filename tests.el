@@ -116,6 +116,25 @@
                  (zpresent/format-title "this title is way too long" 5))))
 
 
+
+(ert-deftest format-title-single-line/too-long-title ()
+  (should (equal "this is a long long title\n"
+                 (zpresent/format-title-single-line "this is a long long title" 10))))
+
+(ert-deftest format-title-single-line/padding-just-one-character ()
+  (should (equal " single\n"
+                 (zpresent/format-title-single-line "single" 8))))
+
+(ert-deftest format-title-single-line/several-padding-chars ()
+  (should (equal "   three here\n"
+                 (zpresent/format-title-single-line "three here" 16))))
+
+(ert-deftest format-title-single-line/ ()
+  (should (equal 'zpresent-h1
+                 (get-text-property 0 'face (zpresent/format-title-single-line "here for the face" 10)))))
+
+
+
 (ert-deftest title-should-be-split/short-title ()
   (should-not (zpresent/title-should-be-split "abc" 9 t)))
 
