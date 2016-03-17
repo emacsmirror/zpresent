@@ -187,7 +187,7 @@ and print the rest of the title on the next line."
              (title-lines (mapcar (lambda (line) (zpresent/format-title line chars-in-line))
                                   (zpresent/split-at-space title chars-considered-long))))
         (string-join title-lines))
-    (zpresent/format-title-single-line title)))
+    (zpresent/format-title-single-line title chars-in-line)))
 
 (defun zpresent/title-should-be-split (title chars-in-line break-long-title)
   "Return t if TITLE is too long for a line of length CHARS-IN-LINE, else nil.
@@ -200,14 +200,12 @@ BREAK-LONG-TITLE indicates whether we should split titles at all."
          (> chars-in-title
             chars-considered-long))))
 
-(defun zpresent/format-title-single-line (title)
-  "Format TITLE as a title.
+(defun zpresent/format-title-single-line (title chars-in-line)
+  "Format TITLE as a title, with the max length being CHARS-IN-LINE.
 
 Treat it as a single line, so won't try to break it for length."
 
-  (let* ((chars-in-line (/ (window-width)
-                           (face-attribute 'zpresent-h1 :height nil t)))
-         (chars-in-title (length title))
+  (let* ((chars-in-title (length title))
          (chars-to-add (max 0
                             (truncate (- chars-in-line chars-in-title)
                                       2))))

@@ -99,5 +99,22 @@
                  (zpresent/make-body-text (car (org-structure "  - in too deep")) 2))))
 
 
+(ert-deftest format-title/basic-title ()
+  (should (equal "  title\n"
+                 (zpresent/format-title "title" 9))))
+
+(ert-deftest format-title/too-long-title ()
+  (should (equal "  long\n  title\n"
+                 (zpresent/format-title "long title" 9 t))))
+
+(ert-deftest format-title/face-is-applied ()
+  (should (equal 'zpresent-h1
+                 (get-text-property 0 'face (zpresent/format-title "here for the face" 10 t)))))
+
+(ert-deftest format-title/break-long-title-arg-obeyed ()
+  (should (equal "this title is way too long\n"
+                 (zpresent/format-title "this title is way too long" 5))))
+
+
 
 ;;; tests.el ends here
