@@ -116,5 +116,15 @@
                  (zpresent/format-title "this title is way too long" 5))))
 
 
+(ert-deftest title-should-be-split/short-title ()
+  (should-not (zpresent/title-should-be-split "abc" 9 t)))
+
+(ert-deftest title-should-be-split/long-title ()
+  (should (zpresent/title-should-be-split (make-string 14 ?z) 5 t)))
+
+(ert-deftest title-should-be-split/break-long-title-argument-is-obeyed ()
+  (should-not (zpresent/title-should-be-split (make-string 14 ?z) 5 nil)))
+
+
 
 ;;; tests.el ends here
