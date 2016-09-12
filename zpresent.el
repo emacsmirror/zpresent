@@ -113,8 +113,7 @@
   "Extracts the text that should go in the slide for STRUCTURE."
   (if (gethash :body structure)
        (append (list (gethash :text structure))
-               (split-string (gethash :body structure)
-                             "\n"))
+               (gethash :body structure))
      (gethash :text structure)))
 
 (defun zpresent/format-recursively-helper (structure slide-so-far level)
