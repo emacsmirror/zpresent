@@ -98,6 +98,10 @@
   (should (equal (list "    in too deep")
                  (zpresent/make-body-text (car (org-structure "  - in too deep")) 2))))
 
+(ert-deftest make-body-text/two-line-headline-not-at-top ()
+  (should (equal (list "   ▸ headline" "     on two lines")
+                 (zpresent/make-body-text (car (gethash :children (car (org-structure "* top\n** headline\non two lines")))) 2))))
+
 
 (ert-deftest format-title/basic-title ()
   (should (equal "  title\n"

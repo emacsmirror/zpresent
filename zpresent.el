@@ -149,8 +149,7 @@ Return the list of slides."
                                 " "
                                "")
                             line))
-                  (split-string (gethash :body structure)
-                                "\n")))))
+                  (gethash :body structure)))))
 
 (defun zpresent/make-slide (title &optional body)
   "Create the slide with title TITLE.
