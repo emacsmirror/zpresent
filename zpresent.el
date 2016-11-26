@@ -90,8 +90,8 @@
 
 (defun zpresent/format (structure-list)
   "Convert an STRUCTURE-LIST into a list of slides."
-  (append (cl-mapcan #'zpresent/format-recursively
-                     structure-list)))
+  (cl-mapcan #'zpresent/format-recursively
+             structure-list))
 
 (defun zpresent/format-recursively (structure)
   "Convert STRUCTURE into a list of slides."
