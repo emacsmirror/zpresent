@@ -95,14 +95,28 @@
 
 (defun zpresent/format-recursively (structure)
   "Convert STRUCTURE into a list of slides."
-  (let* ((slide-so-far (zpresent/make-top-level-slide structure))
-         (slides-so-far (list slide-so-far)))
+  (zpresent/format-recursively-helper structure
+                                      (zpresent/make-top-level-slide structure)
+                                      1))
+
+(defun zpresent/format-recursively-helper (structure slide-so-far level)
+    "Convert STRUCTURE into a list of slides.
+
+SLIDE-SO-FAR is the built-up slide to append text in the body to.
+
+STRUCTURE is at level LEVEL.  This is used for indentation.
+
+Return the list of slides."
+  (let ((most-recent-slide slide-so-far)
+        (slides-list (list slide-so-far))
+        (how-many-slides 0))
     (dolist (cur-child (gethash :children structure))
-      (setq slides-so-far
-            (append slides-so-far
-                    (zpresent/format-recursively-helper cur-child slide-so-far 1)))
-      (setq slide-so-far (car (last slides-so-far))))
-    slides-so-far))
+      (setq slides-list
+            (append slides-list
+                    (zpresent/format-recursively-helper cur-child (zpresent/extend-slide most-recent-slide cur-child level how-many-slides) (1+ level))))
+      (setq most-recent-slide (car (last slides-list)))
+      (incf how-many-slides))
+    slides-list))
 
 (defun zpresent/make-top-level-slide (structure)
   "Make a top level slide from STRUCTURE."
@@ -116,30 +130,27 @@
                (gethash :body structure))
      (gethash :text structure)))
 
-(defun zpresent/format-recursively-helper (structure slide-so-far level)
-  "Convert STRUCTURE into a list of slides.
+(defun zpresent/make-body-text (structure level slide-so-far prior-siblings)
+  "Make the body text for STRUCTURE (a single structure, not a list)
+at indentation level LEVEL.
 
-SLIDE-SO-FAR is the built-up slide to append text in the body to.
+SLIDE-SO-FAR is the slide so far, which might be used to see how many
+items are in an ordered list.
 
-STRUCTURE is at level LEVEL.  This is used for indentation.
+PRIOR-SIBLINGS is the number of structures before STRUCTURE with the
+same parent.  This is used for ordered lists.
 
-Return the list of slides."
-  (let* ((current-slide (zpresent/extend-slide slide-so-far structure level))
-         (slides-so-far (list current-slide)))
-    (dolist (cur-child (gethash :children structure))
-      (setq slides-so-far
-            (append slides-so-far
-                    (zpresent/format-recursively-helper cur-child current-slide (1+ level))))
-      (setq current-slide (car (last slides-so-far))))
-    slides-so-far))
-
-(defun zpresent/make-body-text (structure level)
-  "Make the body text for STRUCTURE at level LEVEL."
+Body text is the text just for the headline, ignoring any children,
+but handling multiline headlines."
   (cons (format " %s%s %s"
                 (make-string (* (1- level) 2) ?\s)
-                  (if (equal ?* (gethash :bullet-type structure))
-                      *zpresent-bullet*
-                    "")
+                (cond ((equal ?* (gethash :bullet-type structure))
+                       *zpresent-bullet*)
+                      ((equal ?\) (gethash :bullet-type structure))
+                       (format "%d)" (1+ prior-siblings)))
+                      ((equal ?. (gethash :bullet-type structure))
+                       (format "%d." (1+ prior-siblings)))
+                      (t ""))
                   (gethash :text structure))
         (when (gethash :body structure)
           (mapcar (lambda (line)
@@ -161,12 +172,15 @@ slide is created with an empty body."
     (puthash 'body (if body (list body) nil) slide)
     slide))
 
-(defun zpresent/extend-slide (slide structure level)
-   "Extend SLIDE with the contents of STRUCTURE, at level LEVEL."
+(defun zpresent/extend-slide (slide structure level &optional prior-siblings)
+   "Extend SLIDE with the contents of STRUCTURE, at level LEVEL.
+
+PRIOR-SIBLINGS is the number of structures at the same level before
+STRUCTURE with the same parent."
   (let ((new-slide (copy-hash-table slide)))
     (puthash 'body
              (append (gethash 'body slide)
-                     (zpresent/make-body-text structure level))
+                     (zpresent/make-body-text structure level slide (or prior-siblings 0)))
              new-slide)
     new-slide))
 

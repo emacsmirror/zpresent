@@ -34,25 +34,25 @@
 
 (ert-deftest extend-slide/original-slide-not-updated ()
   (let* ((original-slide (zpresent/make-slide "I'm the title!"))
-         (new-slide (zpresent/extend-slide original-slide (car (org-structure "* New body text.")) 1)))
+         (new-slide (zpresent/extend-slide original-slide (car (org-structure "* New body text.")) 1 0)))
     (should (equal 2 (hash-table-count original-slide)))
     (should-not (gethash 'body original-slide))))
 
 (ert-deftest extend-slide/check-title ()
   (let* ((original-slide (zpresent/make-slide "I'm the title!"))
-         (new-slide (zpresent/extend-slide original-slide (car (org-structure "* New body text.")) 1)))
+         (new-slide (zpresent/extend-slide original-slide (car (org-structure "* New body text.")) 1 0)))
     (should (equal "I'm the title!"
                    (gethash 'title new-slide)))))
 
 (ert-deftest extend-slide/check-new-body ()
   (let* ((original-slide (zpresent/make-slide "I'm the title!"))
-         (new-slide (zpresent/extend-slide original-slide (car (org-structure "* New body text.")) 1)))
+         (new-slide (zpresent/extend-slide original-slide (car (org-structure "* New body text.")) 1 0)))
     (should (equal (list " ▸ New body text.")
                    (gethash 'body new-slide)))))
 
 (ert-deftest extend-slide/check-added-body ()
   (let* ((original-slide (zpresent/make-slide "I'm the title!" "Initial body."))
-         (new-slide (zpresent/extend-slide original-slide (car (org-structure "* New body text.")) 1)))
+         (new-slide (zpresent/extend-slide original-slide (car (org-structure "* New body text.")) 1 0)))
     (should (equal (list "Initial body." " ▸ New body text.")
                    (gethash 'body new-slide)))))
 
@@ -84,23 +84,45 @@
 
 (ert-deftest make-body-text/simple-headline ()
   (should (equal (list " ▸ headline")
-                 (zpresent/make-body-text (car (org-structure "* headline")) 1))))
+                 (zpresent/make-body-text (car (org-structure "* headline")) 1 (zpresent/make-slide "title") 0))))
 
 (ert-deftest make-body-text/indented-headline ()
   (should (equal (list "   ▸ my headline")
-                 (zpresent/make-body-text (car (org-structure "** my headline")) 2))))
+                 (zpresent/make-body-text (car (org-structure "** my headline")) 2 (zpresent/make-slide "title") 0))))
 
 (ert-deftest make-body-text/plain-list ()
   (should (equal (list "  a plain list")
-                 (zpresent/make-body-text (car (org-structure "- a plain list")) 1))))
+                 (zpresent/make-body-text (car (org-structure "- a plain list")) 1 (zpresent/make-slide "title") 0))))
 
 (ert-deftest make-body-text/indented-plain-list ()
   (should (equal (list "    in too deep")
-                 (zpresent/make-body-text (car (org-structure "  - in too deep")) 2))))
+                 (zpresent/make-body-text (car (org-structure "  - in too deep")) 2 (zpresent/make-slide "title") 0))))
+
+(ert-deftest make-body-text/two-line-headline ()
+  (should (equal (list "   ▸ top headline" "     on two lines")
+                 (zpresent/make-body-text (car (org-structure "* top headline\non two lines")) 2 (zpresent/make-slide "title") 0))))
+
+(ert-deftest make-body-text/ignores-children ()
+  (should (equal (list " ▸ headline")
+                 (zpresent/make-body-text (car (org-structure "* headline\n** I'm nested, you guys!")) 1 (zpresent/make-slide "title") 0))))
 
 (ert-deftest make-body-text/two-line-headline-not-at-top ()
   (should (equal (list "   ▸ headline" "     on two lines")
-                 (zpresent/make-body-text (car (gethash :children (car (org-structure "* top\n** headline\non two lines")))) 2))))
+                 (zpresent/make-body-text (car (gethash :children (car (org-structure "* top\n** headline\non two lines")))) 2 (zpresent/make-slide "title") 0))))
+
+(ert-deftest make-body-text/ordered-list-first-item ()
+  (should (equal (list " 1. First stuff")
+                 (zpresent/make-body-text (first (gethash :children (car (org-structure "* top\n1. First stuff\n2. Other stuff\n"))))
+                                          1
+                                          (zpresent/make-slide "top")
+                                          0))))
+
+(ert-deftest make-body-text/ordered-list-second-item ()
+  (should (equal (list " 2. Other stuff")
+                 (zpresent/make-body-text (second (gethash :children (car (org-structure "* top\n1. First stuff\n2. Other stuff\n"))))
+                                          1
+                                          (zpresent/make-slide "top")
+                                          1))))
 
 
 (ert-deftest format-title/basic-title ()
@@ -149,5 +171,35 @@
   (should-not (zpresent/title-should-be-split (make-string 14 ?z) 5 nil)))
 
 
+
+(ert-deftest format/ordered-lists-start-at-1 ()
+  (should (equal " 1. first child."
+                 (first (gethash 'body (second (zpresent/format (org-structure "* top\n1. first child.\n2. second child."))))))))
+
+(ert-deftest format/ordered-list-second-item-is-2 ()
+  (should (equal " 2. second child."
+                 ;;The third slide is the only one with the second child line.
+                 ;;And each line adds another item to the body -- the first is " 1. first child.".
+                 ;;So in the /third/ slide, get the /second/ line
+                 (second (gethash 'body (third (zpresent/format (org-structure "* top\n1. first child.\n2. second child."))))))))
+
+(ert-deftest format/nested-ordered-lists-start-at-1 ()
+  (should (equal "   1. first double-nested child."
+                 (second (gethash 'body (third (zpresent/format (org-structure "* top\n1. first nested list.\n   1. first double-nested child.\n   2. second double-nested child."))))))))
+
+(ert-deftest format/nested-ordered-lists-second-item-is-2 ()
+  (should (equal "   2. second double-nested child."
+                 (third (gethash 'body (fourth (zpresent/format (org-structure "* top\n1. first nested list.\n   1. first double-nested child.\n   2. second double-nested child."))))))))
+
+
+
+(ert-deftest format-recursively/single-headline ()
+  (should (equal "my headline"
+                 (gethash 'title (first (zpresent/format-recursively (car (org-structure "* my headline"))))))))
+
+
+(ert-deftest format-recursively/single-body ()
+  (should (equal (list " ▸ the body here")
+                 (gethash 'body (second (zpresent/format-recursively (car (org-structure "* my headline\n** the body here"))))))))
 
 ;;; tests.el ends here
