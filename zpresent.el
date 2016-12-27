@@ -63,6 +63,9 @@
 
 (defvar *zpresent-bullet* "▸")
 
+(defvar *zpresent-fullscreen-on-zpresentation* t
+  "Whether to call #'toggle-frame-fullscreen upon starting a presentation.")
+
 
 ;;;; Faces:
 ;;zck make scaling function just change zpresent-base, not the faces in *zpresent-faces*.
@@ -83,6 +86,8 @@
   (switch-to-buffer "zpresentation")
   (font-lock-mode 0)
   (zpresent-mode)
+  (when *zpresent-fullscreen-on-zpresentation*
+      (toggle-frame-fullscreen))
 
   (visual-line-mode)
 
