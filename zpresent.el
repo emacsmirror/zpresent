@@ -66,6 +66,9 @@
 (defvar *zpresent-fullscreen-on-zpresentation* t
   "Whether to call #'toggle-frame-fullscreen upon starting a presentation.")
 
+(defvar *zpresent-delete-other-windows* t
+  "Whether to delete other windows when starting a presentation.")
+
 
 ;;;; Faces:
 ;;zck make scaling function just change zpresent-base, not the faces in *zpresent-faces*.
@@ -87,7 +90,10 @@
   (font-lock-mode 0)
   (zpresent-mode)
   (when *zpresent-fullscreen-on-zpresentation*
-      (toggle-frame-fullscreen))
+    (toggle-frame-fullscreen))
+
+  (when *zpresent-delete-other-windows*
+    (delete-other-windows))
 
   (visual-line-mode)
 
