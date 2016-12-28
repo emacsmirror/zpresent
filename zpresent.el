@@ -300,8 +300,12 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
           (insert (zpresent/format-title (gethash 'title slide) chars-in-line t))))
       (insert "\n"))
     (when (gethash 'body slide)
-      (dolist (body-line (gethash 'body slide))
-        (insert (zpresent/format-body body-line))))))
+      (dolist (body-item (gethash 'body slide))
+        (zpresent/insert-body-item body-item)))))
+
+(defun zpresent/insert-body-item (body-item)
+  "Insert BODY-ITEM into the buffer."
+  (insert (zpresent/format-body body-item)))
 
 (defun zpresent/increase-text-size ()
   "Make everything bigger."
