@@ -141,12 +141,9 @@ Return the list of slides."
                (gethash :body structure))
      (gethash :text structure)))
 
-(defun zpresent/make-body-text (structure level slide-so-far prior-siblings)
+(defun zpresent/make-body-text (structure level prior-siblings)
   "Make the body text for STRUCTURE (a single structure, not a list)
 at indentation level LEVEL.
-
-SLIDE-SO-FAR is the slide so far, which might be used to see how many
-items are in an ordered list.
 
 PRIOR-SIBLINGS is the number of structures before STRUCTURE with the
 same parent.  This is used for ordered lists.
@@ -191,7 +188,7 @@ STRUCTURE with the same parent."
   (let ((new-slide (copy-hash-table slide)))
     (puthash 'body
              (append (gethash 'body slide)
-                     (zpresent/make-body-text structure level slide (or prior-siblings 0)))
+                     (zpresent/make-body-text structure level (or prior-siblings 0)))
              new-slide)
     new-slide))
 

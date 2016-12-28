@@ -84,44 +84,42 @@
 
 (ert-deftest make-body-text/simple-headline ()
   (should (equal (list " ▸ headline")
-                 (zpresent/make-body-text (car (org-structure "* headline")) 1 (zpresent/make-slide "title") 0))))
+                 (zpresent/make-body-text (car (org-structure "* headline")) 1 0))))
 
 (ert-deftest make-body-text/indented-headline ()
   (should (equal (list "   ▸ my headline")
-                 (zpresent/make-body-text (car (org-structure "** my headline")) 2 (zpresent/make-slide "title") 0))))
+                 (zpresent/make-body-text (car (org-structure "** my headline")) 2 0))))
 
 (ert-deftest make-body-text/plain-list ()
   (should (equal (list "  a plain list")
-                 (zpresent/make-body-text (car (org-structure "- a plain list")) 1 (zpresent/make-slide "title") 0))))
+                 (zpresent/make-body-text (car (org-structure "- a plain list")) 1 0))))
 
 (ert-deftest make-body-text/indented-plain-list ()
   (should (equal (list "    in too deep")
-                 (zpresent/make-body-text (car (org-structure "  - in too deep")) 2 (zpresent/make-slide "title") 0))))
+                 (zpresent/make-body-text (car (org-structure "  - in too deep")) 2 0))))
 
 (ert-deftest make-body-text/two-line-headline ()
   (should (equal (list "   ▸ top headline" "     on two lines")
-                 (zpresent/make-body-text (car (org-structure "* top headline\non two lines")) 2 (zpresent/make-slide "title") 0))))
+                 (zpresent/make-body-text (car (org-structure "* top headline\non two lines")) 2 0))))
 
 (ert-deftest make-body-text/ignores-children ()
   (should (equal (list " ▸ headline")
-                 (zpresent/make-body-text (car (org-structure "* headline\n** I'm nested, you guys!")) 1 (zpresent/make-slide "title") 0))))
+                 (zpresent/make-body-text (car (org-structure "* headline\n** I'm nested, you guys!")) 1 0))))
 
 (ert-deftest make-body-text/two-line-headline-not-at-top ()
   (should (equal (list "   ▸ headline" "     on two lines")
-                 (zpresent/make-body-text (car (gethash :children (car (org-structure "* top\n** headline\non two lines")))) 2 (zpresent/make-slide "title") 0))))
+                 (zpresent/make-body-text (car (gethash :children (car (org-structure "* top\n** headline\non two lines")))) 2 0))))
 
 (ert-deftest make-body-text/ordered-list-first-item ()
   (should (equal (list " 1. First stuff")
                  (zpresent/make-body-text (first (gethash :children (car (org-structure "* top\n1. First stuff\n2. Other stuff\n"))))
                                           1
-                                          (zpresent/make-slide "top")
                                           0))))
 
 (ert-deftest make-body-text/ordered-list-second-item ()
   (should (equal (list " 2. Other stuff")
                  (zpresent/make-body-text (second (gethash :children (car (org-structure "* top\n1. First stuff\n2. Other stuff\n"))))
                                           1
-                                          (zpresent/make-slide "top")
                                           1))))
 
 
