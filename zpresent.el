@@ -141,7 +141,7 @@ Return the list of slides."
                (gethash :body structure))
      (gethash :text structure)))
 
-(defun zpresent/make-body-text (structure level prior-siblings)
+(defun zpresent/make-body (structure level prior-siblings)
   "Make the body text for STRUCTURE (a single structure, not a list)
 at indentation level LEVEL.
 
@@ -188,7 +188,7 @@ STRUCTURE with the same parent."
   (let ((new-slide (copy-hash-table slide)))
     (puthash 'body
              (append (gethash 'body slide)
-                     (zpresent/make-body-text structure level (or prior-siblings 0)))
+                     (zpresent/make-body structure level (or prior-siblings 0)))
              new-slide)
     new-slide))
 
