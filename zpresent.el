@@ -135,11 +135,13 @@ Return the list of slides."
 
 ;;zck test how this interacts with indentation/centering, if it does
 (defun zpresent/extract-current-text (structure)
-  "Extracts the text that should go in the slide for STRUCTURE."
+  "Extracts the text that should go in the slide for STRUCTURE.
+
+This returns a list of lines."
   (if (gethash :body structure)
-       (append (list (gethash :text structure))
-               (gethash :body structure))
-     (gethash :text structure)))
+      (append (list (gethash :text structure))
+              (gethash :body structure))
+    (list (gethash :text structure))))
 
 (defun zpresent/make-body (structure level prior-siblings)
   "Make the body text for STRUCTURE (a single structure, not a list)
@@ -148,27 +150,31 @@ at indentation level LEVEL.
 PRIOR-SIBLINGS is the number of structures before STRUCTURE with the
 same parent.  This is used for ordered lists.
 
-Body text is the text just for the headline, ignoring any children,
-but handling multiline headlines."
-  (cons (format " %s%s %s"
-                (make-string (* (1- level) 2) ?\s)
-                (cond ((equal ?* (gethash :bullet-type structure))
-                       *zpresent-bullet*)
-                      ((equal ?\) (gethash :bullet-type structure))
-                       (format "%d)" (1+ prior-siblings)))
-                      ((equal ?. (gethash :bullet-type structure))
-                       (format "%d." (1+ prior-siblings)))
-                      (t ""))
-                  (gethash :text structure))
-        (when (gethash :body structure)
-          (mapcar (lambda (line)
-                    (format "%s%s%s"
-                            (make-string (* level 2) ?\s)
-                            (if (equal ?* (gethash :bullet-type structure))
-                                " "
-                               "")
-                            line))
-                  (gethash :body structure)))))
+Body text is a list containing the text just for the headline,
+ignoring any children, but handling multiline headlines.  Each item in
+this list is a list of strings or structure items.
+
+The result of this is a list, containing both text and hashes.  Hashes
+indicate something other than plain text.  For example, an image."
+  (cons (cons (format " %s%s "
+                      (make-string (* (1- level) 2) ?\s)
+                      (cond ((equal ?* (gethash :bullet-type structure))
+                             *zpresent-bullet*)
+                            ((equal ?\) (gethash :bullet-type structure))
+                             (format "%d)" (1+ prior-siblings)))
+                            ((equal ?. (gethash :bullet-type structure))
+                             (format "%d." (1+ prior-siblings)))
+                            (t "")))
+              (gethash :text structure))
+        (let ((body (gethash :body structure))
+              (body-indentation (format "%s%s"
+                                        (make-string (* level 2) ?\s)
+                                        (if (equal ?* (gethash :bullet-type structure))
+                                            " "
+                                          ""))))
+          (mapcar (lambda (body-line)
+                    (cons body-indentation body-line))
+                  body))))
 
 (defun zpresent/make-slide (title &optional body)
   "Create the slide with title TITLE.
@@ -194,52 +200,202 @@ STRUCTURE with the same parent."
 
 ;;zck eventually keywords? Or symbols? Who knows.
 
-(defun zpresent/format-title (title chars-in-line &optional break-long-title)
-  "Format TITLE appropriately, including padding and applying the face.
+(defun zpresent/break-title-into-lines (title-list chars-in-line)
+  "Break TITLE-LIST into a list of lines, each line shorter than CHARS-IN-LINE.
 
-Format the title for a line of CHARS-IN-LINE characters.
-If BREAK-LONG-TITLE is t, and the title is more than
-*zpresent-long-title-cutoff* of the line, break it there,
-and print the rest of the title on the next line."
-  (if (zpresent/title-should-be-split title chars-in-line break-long-title)
-      (let* ((chars-considered-long (truncate (* chars-in-line
-                                                 *zpresent-long-title-cutoff*)))
-             (title-lines (mapcar (lambda (line) (zpresent/format-title line chars-in-line))
-                                  (zpresent/split-at-space title chars-considered-long))))
-        (string-join title-lines))
-    (zpresent/format-title-single-line title chars-in-line)))
+This will return a list of lists.  The sub-lists will contain a
+mixture of strings and hashes, when there are formatted strings in
+TITLE-LIST.
 
-(defun zpresent/title-should-be-split (title chars-in-line break-long-title)
-  "Return t if TITLE is too long for a line of length CHARS-IN-LINE, else nil.
+If a single word is longer than CHARS-IN-LINE, that entire word will
+be on a sub-list all by itself."
+  (when title-list
+    (cl-multiple-value-bind (first-line rest-of-title-list)
+        (zpresent/pull-single-title-line title-list chars-in-line)
+      (cons first-line
+            (zpresent/break-title-into-lines rest-of-title-list
+                                             chars-in-line)))))
 
-BREAK-LONG-TITLE indicates whether we should split titles at all."
-  (let* ((chars-in-title (length title))
-         (chars-considered-long (truncate (* chars-in-line
-                                             *zpresent-long-title-cutoff*))))
-    (and break-long-title
-         (> chars-in-title
-            chars-considered-long))))
 
-(defun zpresent/format-title-single-line (title chars-in-line)
-  "Format TITLE as a title, with the max length being CHARS-IN-LINE.
+(defun zpresent/pull-single-title-line (title-list chars-in-line &optional strict-length)
+  "Pull a single title line out of TITLE-LIST, a list of items.
 
-Treat it as a single line, so won't try to break it for length."
+A title line is a list of items from TITLE-LIST, or sub-items such
+that the line is length CHARS-IN-LINE or less.
 
-  (let* ((chars-in-title (length title))
-         (chars-to-add (max 0
-                            (truncate (- chars-in-line chars-in-title)
-                                      2))))
-    (format "%s\n"
-            (propertize (format "%s%s" (make-string chars-to-add ?\s) title)
-                        'face
-                        'zpresent-h1))))
+This method returns a list; the first item is the pulled line; the
+second item is the remaining items in TITLE-LIST.
+
+If STRICT-LENGTH is true, the line returned will be less than or equal
+to CHARS-IN-LINE, even if the first word in TITLE-LIST is longer than
+CHARS-IN-LINE.  In that case, the line will be empty.  If
+STRICT-LENGTH is nil, this will return a list containing at least one
+item, even if that single word is longer than CHARS-IN-LINE.
+
+The only thing this should do that -helper doesn't is trim
+whitespace from the first and last thing in the line."
+  (cl-multiple-value-bind (this-line other-title-items)
+      (zpresent/pull-single-title-line-helper (zpresent/trim-beginning-and-end-of-line title-list) chars-in-line strict-length)
+    (list (zpresent/trim-beginning-and-end-of-line this-line)
+          other-title-items)))
+
+(defun zpresent/trim-beginning-and-end-of-line (title-line)
+  "Trim whitespace from the beginning and end of TITLE-LINE."
+  (cond ((not title-line)
+         nil)
+        ((equal 1 (length title-line))
+         (list (zpresent/trim-item (first title-line))))
+        (t (cons (zpresent/trim-item-left (first title-line))
+                 (append (butlast (rest title-line))
+                         (list (zpresent/trim-item-right (first (last title-line)))))))))
+
+(defun zpresent/pull-single-title-line-helper (title-list chars-in-line &optional strict-length)
+  "Helper for zpresent/pull-single-title-line.
+
+Pull a single title line out of TITLE-LIST, a list of items.
+
+A title line is a list of items from TITLE-LIST, or sub-items such
+that the line is length CHARS-IN-LINE or less.
+
+This method returns a list; the first item is the pulled line; the
+second item is the remaining items in TITLE-LIST.
+
+If STRICT-LENGTH is true, the line returned will be less than or equal
+to CHARS-IN-LINE, even if the first word in TITLE-LIST is longer than
+CHARS-IN-LINE.  In that case, the line will be empty.  If
+STRICT-LENGTH is nil, this will return a list containing at least one
+item, even if that single word is longer than CHARS-IN-LINE."
+  (let ((title-list-with-combined-strings (zpresent/combine-consecutive-strings-in-list title-list)))
+    (if (not title-list-with-combined-strings)
+        (list nil nil)
+      (if (>= (zpresent/item-length (first title-list-with-combined-strings))
+              chars-in-line)
+          (cl-multiple-value-bind (before-break after-break)
+              (zpresent/break-item (first title-list-with-combined-strings) chars-in-line strict-length)
+            (list (when before-break
+                    (list before-break))
+                  (if (and after-break
+                           (> (zpresent/item-length after-break)
+                              0))
+                      (cons after-break (cdr title-list-with-combined-strings))
+                    (cdr title-list-with-combined-strings))))
+        (cl-multiple-value-bind (rest-of-line remaining-items)
+            (zpresent/pull-single-title-line-helper (cdr title-list-with-combined-strings)
+                                                    (- chars-in-line
+                                                       (zpresent/item-length (first title-list-with-combined-strings)))
+                                                    t)
+          (list (cons (first title-list-with-combined-strings) rest-of-line)
+                remaining-items))))))
+
+(defun zpresent/trim-item (item)
+  "Trim whitespace on both sides of ITEM."
+  (zpresent/trim-item-left (zpresent/trim-item-right item)))
+
+(defun zpresent/trim-item-left (item)
+  "Trim whitespace on the left of ITEM."
+  (cond ((stringp item)
+         (string-trim-left item))
+        ((hash-table-p item)
+         (let ((copied-hash (copy-hash-table item)))
+           (puthash :text
+                    (string-trim-left (gethash :text item))
+                    copied-hash)
+           copied-hash))))
+
+(defun zpresent/trim-item-right (item)
+  "Trim whitespace on the right of ITEM."
+  (cond ((stringp item)
+         (string-trim-right item))
+        ((hash-table-p item)
+         (let ((copied-hash (copy-hash-table item)))
+           (puthash :text
+                    (string-trim-right (gethash :text item))
+                    copied-hash)
+           copied-hash))))
+
+(defun zpresent/combine-consecutive-strings-in-list (list)
+  "Return LIST, but with consecutive strings joined together."
+  (cond ((< (length list)
+            2)
+         list)
+        ((and (stringp (first list))
+              (stringp (second list)))
+         (zpresent/combine-consecutive-strings-in-list (cons (concat (first list)
+                                                                     (second list))
+                                                             (cdr (cdr list)))))
+        (t (cons (first list)
+                 (zpresent/combine-consecutive-strings-in-list (rest list))))))
+
+(defun zpresent/break-item (item chars-in-line &optional strict-length)
+  "Break ITEM at the last whitespace before or at CHARS-IN-LINE.
+
+If the first word in ITEM is longer than CHARS-IN-LINE, and
+STRICT-LENGTH is nil, this will break at the first whitespace after
+CHARS-IN-LINE.  If STRICT-LENGTH is t, this will return nil for the
+first part of the broken item.
+
+This returns a list where the first item is the first part of the
+broken item, and the second item is the rest of the item."
+  (if (stringp item)
+      (zpresent/split-once-at-space item chars-in-line strict-length)
+    (cl-multiple-value-bind (pre-split post-split)
+        (zpresent/split-once-at-space (gethash :text item)
+                                      chars-in-line
+                                      strict-length)
+      (list (when pre-split (org-structure/make-link-hash (gethash :target item)
+                                                          pre-split))
+            (when post-split (org-structure/make-link-hash (gethash :target item)
+                                                           post-split))))))
+
+(defun zpresent/line-length (line-list)
+  "Calculate the length of LINE-LIST.
+
+LINE-LIST is a list of structure items -- either strings, or hashes
+representing formatted text."
+  (if (not line-list)
+      0
+    (+ (zpresent/item-length (car line-list))
+       (zpresent/line-length (cdr line-list)))))
+
+(defun zpresent/item-length (item)
+  "Calculate the length of ITEM, which is a string or a formatted text hash."
+  (cond ((stringp item) (length item))
+        ((zpresent/item-is-image item)
+         0)
+        ((and (hash-table-p item)
+              (equal (gethash :type item)
+                     :link))
+         (length (gethash :text item)))
+        (t (error "Can't get the length of %s" item))))
 
 (defun zpresent/format-body (body-line)
   "Format BODY-LINE appropriately for the body."
-  (propertize (format "%s\n" body-line)
+  (propertize body-line
               'face
               'zpresent-body))
 
+(defun zpresent/split-once-at-space (string max-length &optional strict-length)
+  "Split STRING at the last space at MAX-LENGTH or earlier.
+
+If the first word is of length MAX-LENGTH or greater, that word will
+be on a line by itself, unless STRICT-LENGTH is t, in which case it'll
+be nil.
+
+This returns a list with the split string as the first item, and
+the rest of the string as the second."
+  (let ((trimmed-string (string-trim string)))
+    (if (<= (length string)
+            max-length)
+        (list string nil)
+      (let ((pos-to-split-at (or (position ?\s string :from-end t :end (truncate (1+ max-length)))
+                                 (and (not strict-length)
+                                      (position ?\s string)))))
+        (cond (pos-to-split-at
+               (list (string-trim-right (substring string 0 pos-to-split-at))
+                     (string-trim-left (substring string pos-to-split-at))))
+              (strict-length
+               (list nil string))
+              (t (list string nil)))))))
 
 (defun zpresent/split-at-space (string max-length)
   "Split STRING at a space.  Each substring must be MAX-LENGTH or shorter.
@@ -292,20 +448,93 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
     (erase-buffer)
     (insert "\n")
     (when (gethash 'title slide)
-      (let ((chars-in-line (/ (window-width)
-                              (face-attribute 'zpresent-h1 :height nil t))))
-        (if (listp (gethash 'title slide))
-            (dolist (title-line (gethash 'title slide))
-              (insert (zpresent/format-title title-line chars-in-line)))
-          (insert (zpresent/format-title (gethash 'title slide) chars-in-line t))))
+      (zpresent/insert-title (gethash 'title slide))
       (insert "\n"))
     (when (gethash 'body slide)
       (dolist (body-item (gethash 'body slide))
-        (zpresent/insert-body-item body-item)))))
+        (zpresent/insert-body-item body-item)
+        (insert "\n")))))
+
+(defun zpresent/insert-title (title)
+  "Insert TITLE into the buffer."
+  (let ((chars-in-line (/ (window-width)
+                          (face-attribute 'zpresent-h1 :height nil t))))
+    (dolist (title-line (if (equal 1 (length title))
+                            (zpresent/break-title-into-lines (first title) (* chars-in-line
+                                                                              *zpresent-long-title-cutoff*))
+                          title))
+      (zpresent/insert-title-line title-line t chars-in-line))))
+
+(defun zpresent/insert-title-line (title-line on-one-line chars-in-line)
+  "Insert TITLE-LINE into the buffer.
+
+If ON-ONE-LINE is t, insert the title all on one line.  Otherwise, it
+might get split if it's longer than CHARS-IN-LINE."
+  (insert (zpresent/whitespace-for-title-line title-line chars-in-line))
+  (dolist (title-item title-line)
+    (zpresent/insert-title-item title-item))
+  (insert "\n"))
+
+(defun zpresent/insert-title-item (item)
+  "Insert ITEM into the buffer as part of the title."
+  (cond ((stringp item)
+         (insert (propertize item
+                             'face
+                             'zpresent-h1)))
+        ((zpresent/item-is-image item)
+         (zpresent/insert-image (gethash :target item)))
+        (t (zpresent/insert-link item 'zpresent-h1))))
+
+(defun zpresent/item-is-image (item)
+  "T if ITEM is an image."
+  (and (hash-table-p item)
+       (equal :link
+              (gethash :type item))
+       (equal "zp-image"
+              (gethash :text item))))
+
+(defun zpresent/insert-image (image-location)
+  "Insert IMAGE-LOCATION as an image."
+  (let ((realpath (if (string-prefix-p "file:" image-location)
+                             (expand-file-name (string-remove-prefix "file:" image-location))
+                           image-location)))
+
+           ;;zck why isn't this inserting images from the internet ok? Should it?
+           (insert-image (create-image realpath))))
+
+(defun zpresent/whitespace-for-title-line (title-line chars-in-line)
+  "Get whitespace for TITLE-LINE.
+
+This method assumes TITLE-LINE will not be split, and the window to be
+printed into has width CHARS-IN-LINE."
+  (let* ((line-width (zpresent/line-length title-line))
+         (chars-to-add (max 0
+                            (truncate (- chars-in-line line-width)
+                                      2))))
+    (propertize (make-string chars-to-add ?\s)
+                'face
+                'zpresent-h1)))
 
 (defun zpresent/insert-body-item (body-item)
   "Insert BODY-ITEM into the buffer."
-  (insert (zpresent/format-body body-item)))
+  (cond ((stringp body-item)
+         (insert (zpresent/format-body body-item)))
+        ((listp body-item)
+         (dolist (inner-item body-item)
+           (zpresent/insert-body-item inner-item)))
+        ((zpresent/item-is-image body-item)
+             (zpresent/insert-image (gethash :target body-item)))
+        (t (zpresent/insert-link body-item 'zpresent-body))))
+
+(defun zpresent/insert-link (link-hash face)
+  "Insert LINK-HASH into the buffer, as a link, with face FACE.
+
+If you want to insert an image, use '#'zpresent/insert-image'."
+  (insert-button (propertize (gethash :text link-hash)
+                             'face face)
+                 'action `(lambda (button) (browse-url ,(gethash :target link-hash)))))
+
+
 
 (defun zpresent/increase-text-size ()
   "Make everything bigger."
