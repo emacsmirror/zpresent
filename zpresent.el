@@ -1,4 +1,4 @@
-;;; zpresent.el --- Simple presentation mode
+;;; zpresent.el --- Simple presentation mode based on org files.  -*- lexical-binding: t; -*-
 ;; Copyright 2015 Zachary Kanfer <zkanfer@gmail.com>
 
 ;; This program is free software: you can redistribute it and/or modify
