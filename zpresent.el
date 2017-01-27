@@ -82,7 +82,7 @@
   "Present the current .org file."
   (interactive)
 
-  (setq *zpresent-source* (org-structure-buffer (current-buffer)))
+  (setq *zpresent-source* (org-parser/parse-buffer (current-buffer)))
   (setq *zpresent-position* 0)
   (setq *zpresent-slides* (zpresent/format *zpresent-source*))
 
@@ -342,9 +342,9 @@ broken item, and the second item is the rest of the item."
         (zpresent/split-once-at-space (gethash :text item)
                                       chars-in-line
                                       strict-length)
-      (list (when pre-split (org-structure/make-link-hash (gethash :target item)
+      (list (when pre-split (org-parser/make-link-hash (gethash :target item)
                                                           pre-split))
-            (when post-split (org-structure/make-link-hash (gethash :target item)
+            (when post-split (org-parser/make-link-hash (gethash :target item)
                                                            post-split))))))
 
 (defun zpresent/line-length (line-list)

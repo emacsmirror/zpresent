@@ -6,7 +6,7 @@
 
 
 ;; (ert-deftest format-block-helper-single-block ()
-;;   (should (org-structure/hash-tables-equal #s(hash-table data (title "a title" body ("one" "two")))
+;;   (should (org-parser/hash-tables-equal #s(hash-table data (title "a title" body ("one" "two")))
 ;;                                            (car (zpresent-format-block-helper (make-hash-table)
 ;;                                                                               (make-hash-table 'title "a title"
 ;;                                                                                                'body nil)
@@ -34,60 +34,60 @@
 
 (ert-deftest extend-slide/original-slide-not-updated ()
   (let* ((original-slide (zpresent/make-slide "I'm the title!"))
-         (new-slide (zpresent/extend-slide original-slide (car (org-structure "* New body text.")) 1 0)))
+         (new-slide (zpresent/extend-slide original-slide (car (org-parser/parse-string "* New body text.")) 1 0)))
     (should (equal 2 (hash-table-count original-slide)))
     (should-not (gethash 'body original-slide))))
 
 (ert-deftest extend-slide/check-title ()
   (let* ((original-slide (zpresent/make-slide "I'm the title!"))
-         (new-slide (zpresent/extend-slide original-slide (car (org-structure "* New body text.")) 1 0)))
+         (new-slide (zpresent/extend-slide original-slide (car (org-parser/parse-string "* New body text.")) 1 0)))
     (should (equal "I'm the title!"
                    (gethash 'title new-slide)))))
 
 (ert-deftest extend-slide/check-new-body ()
   (let* ((original-slide (zpresent/make-slide "I'm the title!"))
-         (new-slide (zpresent/extend-slide original-slide (car (org-structure "* New body text.")) 1 0)))
+         (new-slide (zpresent/extend-slide original-slide (car (org-parser/parse-string "* New body text.")) 1 0)))
     (should (equal '((" ▸ " "New body text."))
                    (gethash 'body new-slide)))))
 
 (ert-deftest extend-slide/check-added-body ()
   (let* ((original-slide (zpresent/make-slide "I'm the title!" "Initial body."))
-         (new-slide (zpresent/extend-slide original-slide (car (org-structure "* New body text.")) 1 0)))
+         (new-slide (zpresent/extend-slide original-slide (car (org-parser/parse-string "* New body text.")) 1 0)))
     (should (equal '("Initial body." (" ▸ " "New body text."))
                    (gethash 'body new-slide)))))
 
 
 (ert-deftest extract-current-text/simple-headline ()
   (should (equal '(("simple headline"))
-                 (zpresent/extract-current-text (car (org-structure "* simple headline"))))))
+                 (zpresent/extract-current-text (car (org-parser/parse-string "* simple headline"))))))
 
 (ert-deftest extract-current-text/nested-headline ()
   (should (equal '(("nested headline"))
-                 (zpresent/extract-current-text (car (org-structure "** nested headline"))))))
+                 (zpresent/extract-current-text (car (org-parser/parse-string "** nested headline"))))))
 
 (ert-deftest extract-current-text/simple-headline-with-multiple-line-body ()
   (should (equal '(("nested headline") ("with body") ("over multiple lines"))
-                 (zpresent/extract-current-text (car (org-structure "** nested headline\nwith body\nover multiple lines"))))))
+                 (zpresent/extract-current-text (car (org-parser/parse-string "** nested headline\nwith body\nover multiple lines"))))))
 
 (ert-deftest extract-current-text/simple-plain-list ()
   (should (equal '(("simple plain list"))
-                 (zpresent/extract-current-text (car (org-structure "- simple plain list"))))))
+                 (zpresent/extract-current-text (car (org-parser/parse-string "- simple plain list"))))))
 
 (ert-deftest extract-current-text/nested-plain-list ()
   (should (equal '(("nested plain list"))
-                 (zpresent/extract-current-text (car (org-structure "  - nested plain list"))))))
+                 (zpresent/extract-current-text (car (org-parser/parse-string "  - nested plain list"))))))
 
 (ert-deftest extract-current-text/simple-plain-list-with-multiple-line-body ()
   (should (equal '(("nested plain list") ("with body") ("over multiple lines"))
-                 (zpresent/extract-current-text (car (org-structure "  - nested plain list\nwith body\nover multiple lines"))))))
+                 (zpresent/extract-current-text (car (org-parser/parse-string "  - nested plain list\nwith body\nover multiple lines"))))))
 
 
 (ert-deftest make-body/simple-headline ()
   (should (equal '((" ▸ " "headline"))
-                 (zpresent/make-body (car (org-structure "* headline")) 1 0))))
+                 (zpresent/make-body (car (org-parser/parse-string "* headline")) 1 0))))
 
 (ert-deftest make-body/link-in-headline ()
-  (let ((body (zpresent/make-body (car (org-structure "* headline [[http://example.com][with link]] in it")) 1 0)))
+  (let ((body (zpresent/make-body (car (org-parser/parse-string "* headline [[http://example.com][with link]] in it")) 1 0)))
     (should (equal 1 (length body)))
     (let ((title-line (first body)))
       (should (equal 4 (length title-line)))
@@ -101,7 +101,7 @@
       (should (equal " in it" (fourth title-line))))))
 
 (ert-deftest make-body/link-in-headline-with-body ()
-  (let ((body (zpresent/make-body (car (org-structure "* headline [[http://example.com][with link]] in it\nand now a body [[http://example.com][with a link!]]\nwith two parts")) 1 0)))
+  (let ((body (zpresent/make-body (car (org-parser/parse-string "* headline [[http://example.com][with link]] in it\nand now a body [[http://example.com][with a link!]]\nwith two parts")) 1 0)))
     (should (equal 3 (length body)))
     (cl-multiple-value-bind (first-line second-line third-line)
         body
@@ -129,37 +129,37 @@
 
 (ert-deftest make-body/indented-headline ()
   (should (equal '(("   ▸ " "my headline"))
-                 (zpresent/make-body (car (org-structure "** my headline")) 2 0))))
+                 (zpresent/make-body (car (org-parser/parse-string "** my headline")) 2 0))))
 
 (ert-deftest make-body/plain-list ()
   (should (equal '(("  " "a plain list"))
-                 (zpresent/make-body (car (org-structure "- a plain list")) 1 0))))
+                 (zpresent/make-body (car (org-parser/parse-string "- a plain list")) 1 0))))
 
 (ert-deftest make-body/indented-plain-list ()
   (should (equal '(("    " "in too deep"))
-                 (zpresent/make-body (car (org-structure "  - in too deep")) 2 0))))
+                 (zpresent/make-body (car (org-parser/parse-string "  - in too deep")) 2 0))))
 
 (ert-deftest make-body/two-line-headline ()
   (should (equal '(("   ▸ " "top headline") ("     " "on two lines"))
-                 (zpresent/make-body (car (org-structure "* top headline\non two lines")) 2 0))))
+                 (zpresent/make-body (car (org-parser/parse-string "* top headline\non two lines")) 2 0))))
 
 (ert-deftest make-body/ignores-children ()
   (should (equal '((" ▸ " "headline"))
-                 (zpresent/make-body (car (org-structure "* headline\n** I'm nested, you guys!")) 1 0))))
+                 (zpresent/make-body (car (org-parser/parse-string "* headline\n** I'm nested, you guys!")) 1 0))))
 
 (ert-deftest make-body/two-line-headline-not-at-top ()
   (should (equal '(("   ▸ " "headline") ("     " "on two lines"))
-                 (zpresent/make-body (car (gethash :children (car (org-structure "* top\n** headline\non two lines")))) 2 0))))
+                 (zpresent/make-body (car (gethash :children (car (org-parser/parse-string "* top\n** headline\non two lines")))) 2 0))))
 
 (ert-deftest make-body/ordered-list-first-item ()
   (should (equal '((" 1. " "First stuff"))
-                 (zpresent/make-body (first (gethash :children (car (org-structure "* top\n1. First stuff\n2. Other stuff\n"))))
+                 (zpresent/make-body (first (gethash :children (car (org-parser/parse-string "* top\n1. First stuff\n2. Other stuff\n"))))
                                           1
                                           0))))
 
 (ert-deftest make-body/ordered-list-second-item ()
   (should (equal '((" 2. " "Other stuff"))
-                 (zpresent/make-body (second (gethash :children (car (org-structure "* top\n1. First stuff\n2. Other stuff\n"))))
+                 (zpresent/make-body (second (gethash :children (car (org-parser/parse-string "* top\n1. First stuff\n2. Other stuff\n"))))
                                           1
                                           1))))
 
@@ -194,7 +194,7 @@
 (ert-deftest whitespace-for-title-line/with-link ()
     (should (equal 3
                    (length (zpresent/whitespace-for-title-line `("hi mom "
-                                                                 ,(org-structure/make-link-hash "http://example.com" "I'm a")
+                                                                 ,(org-parser/make-link-hash "http://example.com" "I'm a")
                                                                  " title")
                                                                25)))))
 
@@ -229,7 +229,7 @@
 (ert-deftest break-title-into-lines/with-unbroken-link ()
   (let ((result-list (zpresent/break-title-into-lines
                       (list "Here's a link: "
-                            (org-structure/make-link-hash "my-target" "my-text"))
+                            (org-parser/make-link-hash "my-target" "my-text"))
                       50)))
     (should (equal 1
                    (length result-list)))
@@ -248,7 +248,7 @@
 (ert-deftest break-title-into-lines/with-broken-link ()
     (let ((result-list (zpresent/break-title-into-lines
                         (list "123 "
-                              (org-structure/make-link-hash "my-target" " 67 901 "))
+                              (org-parser/make-link-hash "my-target" " 67 901 "))
                         10)))
       (should (equal 2
                      (length result-list)))
@@ -282,7 +282,7 @@
                  (zpresent/break-title-into-lines (list "Look at all of the    spaces!") 15))))
 
 (ert-deftest break-title-into-lines/multiple-spaces-in-link-text-are-kept ()
-  (let ((result (zpresent/break-title-into-lines (list "Look at " (org-structure/make-link-hash "an invalid target" "some   spaces")) 50)))
+  (let ((result (zpresent/break-title-into-lines (list "Look at " (org-parser/make-link-hash "an invalid target" "some   spaces")) 50)))
     (should (equal 1
                    (length result)))
     (should (equal 2
@@ -296,7 +296,7 @@
                      (gethash :text link-hash))))))
 
 (ert-deftest break-title-into-lines/with-text-after-unbroken-link ()
-  (let ((result (zpresent/break-title-into-lines (list "Look at " (org-structure/make-link-hash "an invalid target" "this link") " and now more text")
+  (let ((result (zpresent/break-title-into-lines (list "Look at " (org-parser/make-link-hash "an invalid target" "this link") " and now more text")
                                                  50)))
     (should (equal 1
                    (length result)))
@@ -314,7 +314,7 @@
                      (third sublist))))))
 
 (ert-deftest break-title-into-lines/with-text-after-broken-link ()
-  (let ((result (zpresent/break-title-into-lines (list "Here " (org-structure/make-link-hash "an invalid target" "this link") " is.")
+  (let ((result (zpresent/break-title-into-lines (list "Here " (org-parser/make-link-hash "an invalid target" "this link") " is.")
                                                  9)))
     (should (equal 2
                    (length result)))
@@ -342,7 +342,7 @@
                      (second second-sublist))))))
 
 (ert-deftest break-title-into-lines/with-link-text-too-long ()
-  (let ((result (zpresent/break-title-into-lines (list (org-structure/make-link-hash "an invalid target" "thistextissolongbutitcantbebroken!")) 10)))
+  (let ((result (zpresent/break-title-into-lines (list (org-parser/make-link-hash "an invalid target" "thistextissolongbutitcantbebroken!")) 10)))
     (should (equal 1 (length result)))
     (should (equal 1 (length (first result))))
     (let ((link-hash (first (first result))))
@@ -368,7 +368,7 @@
 
 (ert-deftest pull-single-title-line/broken-right-at-whitespace-before-link ()
   (let ((result (zpresent/pull-single-title-line (list "A "
-                                                       (org-structure/make-link-hash "http://example.com"
+                                                       (org-parser/make-link-hash "http://example.com"
                                                                                      "whatever"))
                                                  1)))
     (should (equal (list "A")
@@ -382,7 +382,7 @@
 
 (ert-deftest pull-single-title-line/pulls-in-link-only-if-it-has-to ()
   (let ((result (zpresent/pull-single-title-line (list "my "
-                                                       (org-structure/make-link-hash "http://example.com"
+                                                       (org-parser/make-link-hash "http://example.com"
                                                                                      "link"))
                                                  4)))
     (should (equal '("my")
@@ -391,7 +391,7 @@
 ;;pull-single-title-line doesn't strip whitespace from the beginning if it doesn't break the item.
 
 (ert-deftest pull-single-title-line/whitespae-between-words-not-stripped ()
-  (let ((result (zpresent/pull-single-title-line (list (org-structure/make-link-hash "http://example.com"
+  (let ((result (zpresent/pull-single-title-line (list (org-parser/make-link-hash "http://example.com"
                                                                                      "link")
                                                        "  here and more stuff")
                                                  10)))
@@ -469,7 +469,7 @@
 
 
 (ert-deftest pull-single-title-line/single-link ()
-  (let ((result (zpresent/pull-single-title-line (list (org-structure/make-link-hash "http://example.com" "Short link text"))
+  (let ((result (zpresent/pull-single-title-line (list (org-parser/make-link-hash "http://example.com" "Short link text"))
                                                  20)))
     (should (equal 2
                    (length result)))
@@ -483,7 +483,7 @@
     (should-not (second result))))
 
 (ert-deftest pull-single-title-line/single-link-broken ()
-  (let ((result (zpresent/pull-single-title-line (list (org-structure/make-link-hash "http://example.com" "Long link text"))
+  (let ((result (zpresent/pull-single-title-line (list (org-parser/make-link-hash "http://example.com" "Long link text"))
                                                  10)))
     (should (equal 2
                    (length result)))
@@ -502,9 +502,9 @@
                      (gethash :text second-link-hash))))))
 
 (ert-deftest pull-single-title-line/multiple-links-in-one-line ()
-  (let ((result (zpresent/pull-single-title-line (list (org-structure/make-link-hash "http://example.com" "One link")
+  (let ((result (zpresent/pull-single-title-line (list (org-parser/make-link-hash "http://example.com" "One link")
                                                        " and "
-                                                       (org-structure/make-link-hash "http://example.com" "another link!"))
+                                                       (org-parser/make-link-hash "http://example.com" "another link!"))
                                                  50)))
     (should (equal 2
                    (length result)))
@@ -527,9 +527,9 @@
     (should-not (second result))))
 
 (ert-deftest pull-single-title-line/second-link-broken ()
-    (let ((result (zpresent/pull-single-title-line (list (org-structure/make-link-hash "http://example.com" "One link")
+    (let ((result (zpresent/pull-single-title-line (list (org-parser/make-link-hash "http://example.com" "One link")
                                                        " and "
-                                                       (org-structure/make-link-hash "http://example.com" "another link!"))
+                                                       (org-parser/make-link-hash "http://example.com" "another link!"))
                                                  22)))
     (should (equal 2
                    (length result)))
@@ -574,7 +574,7 @@
                  (zpresent/trim-beginning-and-end-of-line (list "nothing here")))))
 
 (ert-deftest trim-beginning-and-end-of-line/one-link-no-trimming ()
-  (let ((result (zpresent/trim-beginning-and-end-of-line (list (org-structure/make-link-hash "http://example.com"
+  (let ((result (zpresent/trim-beginning-and-end-of-line (list (org-parser/make-link-hash "http://example.com"
                                                                                              "nor here")))))
     (should (equal 1
                    (length result)))
@@ -588,7 +588,7 @@
                  (zpresent/trim-beginning-and-end-of-line (list "   a string  ")))))
 
 (ert-deftest trim-beginning-and-end-of-line/one-link-both-trimming ()
-  (let ((result (zpresent/trim-beginning-and-end-of-line (list (org-structure/make-link-hash "http://example.com"
+  (let ((result (zpresent/trim-beginning-and-end-of-line (list (org-parser/make-link-hash "http://example.com"
                                                                                              " trim both  ")))))
     (should (equal 1
                    (length result)))
@@ -607,7 +607,7 @@
 
 (ert-deftest trim-beginning-and-end-of-line/strings-and-links-no-trimming ()
   (let ((result (zpresent/trim-beginning-and-end-of-line (list "nothing here "
-                                                                (org-structure/make-link-hash "http://example.com"
+                                                                (org-parser/make-link-hash "http://example.com"
                                                                                               " nor here ")
                                                                 " and definitely not here."))))
     (should (equal 3
@@ -622,10 +622,10 @@
 
 (ert-deftest trim-beginning-and-end-of-line/strings-and-links-with-trimming ()
   (let ((result (zpresent/trim-beginning-and-end-of-line (list "   some stuff here "
-                                                                (org-structure/make-link-hash "http://example.com"
+                                                                (org-parser/make-link-hash "http://example.com"
                                                                                               " but not here ")
                                                                 " and definitely not here."
-                                                                (org-structure/make-link-hash "http://example.com"
+                                                                (org-parser/make-link-hash "http://example.com"
                                                                                               " but here I guess  ")))))
     (should (equal 4
                    (length result)))
@@ -648,7 +648,7 @@
                  (zpresent/trim-item-left "  whatever this thing is "))))
 
 (ert-deftest trim-item-left/link ()
-  (let ((result-hash (zpresent/trim-item-left (org-structure/make-link-hash "http://example.com"
+  (let ((result-hash (zpresent/trim-item-left (org-parser/make-link-hash "http://example.com"
                                                                             "  whatever this is "))))
     (should (hash-table-p result-hash))
     (should (equal "http://example.com"
@@ -661,7 +661,7 @@
                  (zpresent/trim-item-left "whatever this thing is "))))
 
 (ert-deftest trim-item-left/untrimmed-link ()
-  (let ((result-hash (zpresent/trim-item-left (org-structure/make-link-hash "http://example.com"
+  (let ((result-hash (zpresent/trim-item-left (org-parser/make-link-hash "http://example.com"
                                                                             "whatever this is "))))
     (should (hash-table-p result-hash))
     (should (equal "http://example.com"
@@ -674,7 +674,7 @@
                  (zpresent/trim-item-right "  whatever this thing is   "))))
 
 (ert-deftest trim-item-right/link ()
-  (let ((result-hash (zpresent/trim-item-right (org-structure/make-link-hash "http://example.com"
+  (let ((result-hash (zpresent/trim-item-right (org-parser/make-link-hash "http://example.com"
                                                                             "  whatever this is "))))
     (should (hash-table-p result-hash))
     (should (equal "http://example.com"
@@ -687,7 +687,7 @@
                  (zpresent/trim-item-right " whatever this thing is "))))
 
 (ert-deftest trim-item-right/untrimmed-link ()
-  (let ((result-hash (zpresent/trim-item-right (org-structure/make-link-hash "http://example.com"
+  (let ((result-hash (zpresent/trim-item-right (org-parser/make-link-hash "http://example.com"
                                                                             "  whatever this is"))))
     (should (hash-table-p result-hash))
     (should (equal "http://example.com"
@@ -709,13 +709,13 @@
                  (zpresent/combine-consecutive-strings-in-list '("I'm" " three " "strings")))))
 
 (ert-deftest combine-consecutive-strings-in-list/link ()
-  (let ((result (zpresent/combine-consecutive-strings-in-list (list (org-structure/make-link-hash "http://example.com" "my target")))))
+  (let ((result (zpresent/combine-consecutive-strings-in-list (list (org-parser/make-link-hash "http://example.com" "my target")))))
     (should (equal 1
                    (length result)))
     (should (hash-table-p (first result)))))
 
 (ert-deftest combine-consecutive-strings-in-list/link-and-two-strings ()
-  (let ((result (zpresent/combine-consecutive-strings-in-list (list (org-structure/make-link-hash "http://example.com" "my target")
+  (let ((result (zpresent/combine-consecutive-strings-in-list (list (org-parser/make-link-hash "http://example.com" "my target")
                                                                     "Two "
                                                                     "strings"))))
     (should (equal 2
@@ -737,12 +737,12 @@
 
 (ert-deftest line-length/single-link ()
   (should (equal 14
-                 (zpresent/line-length (list (org-structure/make-link-hash "target" "link text here"))))))
+                 (zpresent/line-length (list (org-parser/make-link-hash "target" "link text here"))))))
 
 (ert-deftest line-length/link-and-strings ()
   (should (equal 14
                  (zpresent/line-length (list "Here's "
-                                             (org-structure/make-link-hash "target" "a link!"))))))
+                                             (org-parser/make-link-hash "target" "a link!"))))))
 
 
 (ert-deftest item-length/string ()
@@ -751,13 +751,13 @@
 
 (ert-deftest item-length/link ()
   (should (equal 35
-                 (zpresent/item-length (org-structure/make-link-hash "http://ignore.example.com" "This is what matters for this test.")))))
+                 (zpresent/item-length (org-parser/make-link-hash "http://ignore.example.com" "This is what matters for this test.")))))
 
 (ert-deftest item-length/image-link ()
   ;;zck should this be 1? Should it look at the actual width?
   ;; It definitely shouldn't be the length of "zp-image".
   (should (equal -1
-                 (zpresent/item-length (org-structure/make-link-hash "file:favicon.ico" "zp-image")))))
+                 (zpresent/item-length (org-parser/make-link-hash "file:favicon.ico" "zp-image")))))
 
 
 (ert-deftest item-is-image/string-isnt ()
@@ -767,10 +767,10 @@
   (should-not (zpresent/item-is-image "zp-image")))
 
 (ert-deftest item-is-image/image-is ()
-  (should (zpresent/item-is-image (org-structure/make-link-hash "http://example.com/image.jpg" "zp-image"))))
+  (should (zpresent/item-is-image (org-parser/make-link-hash "http://example.com/image.jpg" "zp-image"))))
 
 (ert-deftest item-is-image/non-image-link-isnt ()
-  (should-not (zpresent/item-is-image (org-structure/make-link-hash "http://example.com/image.jpg" "I'm not an image, silly!"))))
+  (should-not (zpresent/item-is-image (org-parser/make-link-hash "http://example.com/image.jpg" "I'm not an image, silly!"))))
 
 
 
@@ -788,7 +788,7 @@
 
 (ert-deftest break-item/unbroken-link ()
   (cl-multiple-value-bind (before-break after-break)
-      (zpresent/break-item (org-structure/make-link-hash "http://example.com"
+      (zpresent/break-item (org-parser/make-link-hash "http://example.com"
                                                          "Still short")
                            20)
     (should (hash-table-p before-break))
@@ -801,7 +801,7 @@
 
 (ert-deftest break-item/unbroken-link ()
   (cl-multiple-value-bind (before-break after-break)
-      (zpresent/break-item (org-structure/make-link-hash "http://example.com"
+      (zpresent/break-item (org-parser/make-link-hash "http://example.com"
                                                          "Long enough to break somewhere in the line")
                            20)
     (should (hash-table-p before-break))
@@ -818,7 +818,7 @@
 
 (ert-deftest break-item/too-long-link ()
   (cl-multiple-value-bind (before-break after-break)
-      (zpresent/break-item (org-structure/make-link-hash "http://example.com"
+      (zpresent/break-item (org-parser/make-link-hash "http://example.com"
                                                          "I'mWayTooLongToBreak but you can break me")
                            10)
     (should (hash-table-p before-break))
@@ -840,7 +840,7 @@
                                       t))))
 
 (ert-deftest break-item/link-strict-length-t ()
-  (let ((result (zpresent/break-item (org-structure/make-link-hash "http://example.com"
+  (let ((result (zpresent/break-item (org-parser/make-link-hash "http://example.com"
                                                                    "too-long-johnny")
                                      5
                                      t)))
@@ -848,7 +848,7 @@
     (should (hash-table-p (second result)))))
 
 (ert-deftest break-item/link-strict-length-nil ()
-  (let ((result (zpresent/break-item (org-structure/make-link-hash "http://example.com"
+  (let ((result (zpresent/break-item (org-parser/make-link-hash "http://example.com"
                                                                    "too-long-johnny")
                                      5
                                      nil)))
@@ -950,32 +950,32 @@
 
 (ert-deftest format/ordered-lists-start-at-1 ()
   (should (equal '(" 1. " "first child.")
-                 (first (gethash 'body (second (zpresent/format (org-structure "* top\n1. first child.\n2. second child."))))))))
+                 (first (gethash 'body (second (zpresent/format (org-parser/parse-string "* top\n1. first child.\n2. second child."))))))))
 
 (ert-deftest format/ordered-list-second-item-is-2 ()
   (should (equal '(" 2. " "second child.")
                  ;;The third slide is the only one with the second child line.
                  ;;And each line adds another item to the body -- the first is " 1. first child.".
                  ;;So in the /third/ slide, get the /second/ line
-                 (second (gethash 'body (third (zpresent/format (org-structure "* top\n1. first child.\n2. second child."))))))))
+                 (second (gethash 'body (third (zpresent/format (org-parser/parse-string "* top\n1. first child.\n2. second child."))))))))
 
 (ert-deftest format/nested-ordered-lists-start-at-1 ()
   (should (equal '("   1. " "first double-nested child.")
-                 (second (gethash 'body (third (zpresent/format (org-structure "* top\n1. first nested list.\n   1. first double-nested child.\n   2. second double-nested child."))))))))
+                 (second (gethash 'body (third (zpresent/format (org-parser/parse-string "* top\n1. first nested list.\n   1. first double-nested child.\n   2. second double-nested child."))))))))
 
 (ert-deftest format/nested-ordered-lists-second-item-is-2 ()
   (should (equal '("   2. " "second double-nested child.")
-                 (third (gethash 'body (fourth (zpresent/format (org-structure "* top\n1. first nested list.\n   1. first double-nested child.\n   2. second double-nested child."))))))))
+                 (third (gethash 'body (fourth (zpresent/format (org-parser/parse-string "* top\n1. first nested list.\n   1. first double-nested child.\n   2. second double-nested child."))))))))
 
 
 
 (ert-deftest format-recursively/single-headline ()
   (should (equal '(("my headline"))
-                 (gethash 'title (first (zpresent/format-recursively (car (org-structure "* my headline"))))))))
+                 (gethash 'title (first (zpresent/format-recursively (car (org-parser/parse-string "* my headline"))))))))
 
 
 (ert-deftest format-recursively/single-body ()
   (should (equal '((" ▸ " "the body here"))
-                 (gethash 'body (second (zpresent/format-recursively (car (org-structure "* my headline\n** the body here"))))))))
+                 (gethash 'body (second (zpresent/format-recursively (car (org-parser/parse-string "* my headline\n** the body here"))))))))
 
 ;;; tests.el ends here
