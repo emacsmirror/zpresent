@@ -23,6 +23,8 @@
 
 ;; Package-Requires: ((emacs "24.4") (org-element "0.1"))
 
+;; Keywords: comm
+
 
 ;;; Commentary:
 
