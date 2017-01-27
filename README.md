@@ -13,7 +13,7 @@ This file:
     * Start with a title
     And have body text.
 
-results in three slides: 
+results in two slides:
 
 1. Title-only slide
 
@@ -22,14 +22,7 @@ results in three slides:
     * zpresent.el -- a new way to present!
 ```
 
-
-2. Title-only version of second headline
-
-```
-    * Start with a title
-```
-
-3. Title-and-text version of second headline
+2. Second headline, title and text
 
 ```
     * Start with a title
