@@ -1,6 +1,8 @@
 ;;; zpresent.el --- Simple presentation mode based on org files.  -*- lexical-binding: t; -*-
 ;; Copyright 2015 Zachary Kanfer <zkanfer@gmail.com>
 
+;; Version: 0.1
+
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
