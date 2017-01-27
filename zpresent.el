@@ -87,6 +87,7 @@
 (defface zpresent-body '((t . (:height 0.66 :inherit zpresent-base))) "Face for the body." :group 'zpresent-faces)
 
 ;;;; Actual code:
+;;;###autoload
 (defun zpresent ()
   "Present the current .org file."
   (interactive)
