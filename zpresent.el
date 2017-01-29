@@ -126,11 +126,11 @@
 (defun zpresent--format-recursively (structure)
   "Convert STRUCTURE into a list of slides."
   (zpresent--format-recursively-helper structure
-                                      (zpresent--make-top-level-slide structure)
-                                      1))
+                                       (zpresent--make-top-level-slide structure)
+                                       1))
 
 (defun zpresent--format-recursively-helper (structure slide-so-far level)
-    "Convert STRUCTURE into a list of slides.
+  "Convert STRUCTURE into a list of slides.
 
 SLIDE-SO-FAR is the built-up slide to append text in the body to.
 
@@ -206,7 +206,7 @@ slide is created with an empty body."
     slide))
 
 (defun zpresent--extend-slide (slide structure level &optional prior-siblings)
-   "Extend SLIDE with the contents of STRUCTURE, at level LEVEL.
+  "Extend SLIDE with the contents of STRUCTURE, at level LEVEL.
 
 PRIOR-SIBLINGS is the number of structures at the same level before
 STRUCTURE with the same parent."
@@ -233,7 +233,7 @@ be on a sub-list all by itself."
         (zpresent--pull-single-title-line title-list chars-in-line)
       (cons first-line
             (zpresent--break-title-into-lines rest-of-title-list
-                                             chars-in-line)))))
+                                              chars-in-line)))))
 
 
 (defun zpresent--pull-single-title-line (title-list chars-in-line &optional strict-length)
@@ -300,9 +300,9 @@ item, even if that single word is longer than CHARS-IN-LINE."
                     (cdr title-list-with-combined-strings))))
         (cl-multiple-value-bind (rest-of-line remaining-items)
             (zpresent--pull-single-title-line-helper (cdr title-list-with-combined-strings)
-                                                    (- chars-in-line
-                                                       (zpresent--item-length (cl-first title-list-with-combined-strings)))
-                                                    t)
+                                                     (- chars-in-line
+                                                        (zpresent--item-length (cl-first title-list-with-combined-strings)))
+                                                     t)
           (list (cons (cl-first title-list-with-combined-strings) rest-of-line)
                 remaining-items))))))
 
@@ -340,8 +340,8 @@ item, even if that single word is longer than CHARS-IN-LINE."
         ((and (stringp (cl-first list))
               (stringp (cl-second list)))
          (zpresent--combine-consecutive-strings-in-list (cons (concat (cl-first list)
-                                                                     (cl-second list))
-                                                             (cdr (cdr list)))))
+                                                                      (cl-second list))
+                                                              (cdr (cdr list)))))
         (t (cons (cl-first list)
                  (zpresent--combine-consecutive-strings-in-list (cl-rest list))))))
 
@@ -359,12 +359,12 @@ broken item, and the second item is the rest of the item."
       (zpresent--split-once-at-space item chars-in-line strict-length)
     (cl-multiple-value-bind (pre-split post-split)
         (zpresent--split-once-at-space (gethash :text item)
-                                      chars-in-line
-                                      strict-length)
+                                       chars-in-line
+                                       strict-length)
       (list (when pre-split (org-parser--make-link-hash (gethash :target item)
-                                                          pre-split))
+                                                        pre-split))
             (when post-split (org-parser--make-link-hash (gethash :target item)
-                                                           post-split))))))
+                                                         post-split))))))
 
 (defun zpresent--line-length (line-list)
   "Calculate the length of LINE-LIST.
@@ -447,16 +447,16 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
   (interactive)
   (when (< zpresent-position
            (1- (length zpresent-slides)))
-      (cl-incf zpresent-position)
-      (zpresent--slide (elt zpresent-slides zpresent-position))))
+    (cl-incf zpresent-position)
+    (zpresent--slide (elt zpresent-slides zpresent-position))))
 
 (defun zpresent--previous-slide ()
   "Move to the previous slide."
   (interactive)
   (when (> zpresent-position
            0)
-      (cl-decf zpresent-position)
-      (zpresent--slide (elt zpresent-slides zpresent-position))))
+    (cl-decf zpresent-position)
+    (zpresent--slide (elt zpresent-slides zpresent-position))))
 
 (defun zpresent--slide (slide)
   "Present SLIDE."
@@ -480,7 +480,7 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
                           (face-attribute 'zpresent-h1 :height nil t))))
     (dolist (title-line (if (equal 1 (length title))
                             (zpresent--break-title-into-lines (cl-first title) (* chars-in-line
-                                                                              zpresent-long-title-cutoff))
+                                                                                  zpresent-long-title-cutoff))
                           title))
       (zpresent--insert-title-line title-line t chars-in-line))))
 
@@ -515,11 +515,11 @@ might get split if it's longer than CHARS-IN-LINE."
 (defun zpresent--insert-image (image-location)
   "Insert IMAGE-LOCATION as an image."
   (let ((realpath (if (string-prefix-p "file:" image-location)
-                             (expand-file-name (string-remove-prefix "file:" image-location))
-                           image-location)))
+                      (expand-file-name (string-remove-prefix "file:" image-location))
+                    image-location)))
 
-           ;;zck why isn't this inserting images from the internet ok? Should it?
-           (insert-image (create-image realpath))))
+    ;;zck why isn't this inserting images from the internet ok? Should it?
+    (insert-image (create-image realpath))))
 
 (defun zpresent--whitespace-for-title-line (title-line chars-in-line)
   "Get whitespace for TITLE-LINE.
@@ -542,7 +542,7 @@ printed into has width CHARS-IN-LINE."
          (dolist (inner-item body-item)
            (zpresent--insert-body-item inner-item)))
         ((zpresent--item-is-image body-item)
-             (zpresent--insert-image (gethash :target body-item)))
+         (zpresent--insert-image (gethash :target body-item)))
         (t (zpresent--insert-link body-item 'zpresent-body))))
 
 (defun zpresent--insert-link (link-hash face)
