@@ -21,12 +21,16 @@
 
 ;; Homepage: https://bitbucket.org/zck/zpresent.el
 
-;; Package-Requires: ((emacs "24.4") (org-parser "0.1"))
+;; Package-Requires: ((emacs "25.1") (org-parser "0.1"))
 
 ;; Keywords: comm
 
 
 ;;; Commentary:
+
+;;; TODOs:
+;;zck why symbols here, but keywords in org-structure?
+;;zck test non-ordered non-headline lists
 
 ;;; Code:
 
@@ -50,8 +54,9 @@
 
 
 ;;;; Requires:
-(require 'org-element)
+(require 'org-parser)
 (require 'subr-x)
+(require 'cl-lib)
 
 ;;;; Variables:
 (defvar zpresent-slides nil
@@ -140,7 +145,7 @@ Return the list of slides."
             (append slides-list
                     (zpresent--format-recursively-helper cur-child (zpresent--extend-slide most-recent-slide cur-child level how-many-slides) (1+ level))))
       (setq most-recent-slide (car (last slides-list)))
-      (incf how-many-slides))
+      (cl-incf how-many-slides))
     slides-list))
 
 (defun zpresent--make-top-level-slide (structure)
@@ -258,10 +263,10 @@ whitespace from the first and last thing in the line."
   (cond ((not title-line)
          nil)
         ((equal 1 (length title-line))
-         (list (zpresent--trim-item (first title-line))))
-        (t (cons (zpresent--trim-item-left (first title-line))
-                 (append (butlast (rest title-line))
-                         (list (zpresent--trim-item-right (first (last title-line)))))))))
+         (list (zpresent--trim-item (cl-first title-line))))
+        (t (cons (zpresent--trim-item-left (cl-first title-line))
+                 (append (butlast (cl-rest title-line))
+                         (list (zpresent--trim-item-right (cl-first (last title-line)))))))))
 
 (defun zpresent--pull-single-title-line-helper (title-list chars-in-line &optional strict-length)
   "Helper for zpresent--pull-single-title-line.
@@ -282,10 +287,10 @@ item, even if that single word is longer than CHARS-IN-LINE."
   (let ((title-list-with-combined-strings (zpresent--combine-consecutive-strings-in-list title-list)))
     (if (not title-list-with-combined-strings)
         (list nil nil)
-      (if (>= (zpresent--item-length (first title-list-with-combined-strings))
+      (if (>= (zpresent--item-length (cl-first title-list-with-combined-strings))
               chars-in-line)
           (cl-multiple-value-bind (before-break after-break)
-              (zpresent--break-item (first title-list-with-combined-strings) chars-in-line strict-length)
+              (zpresent--break-item (cl-first title-list-with-combined-strings) chars-in-line strict-length)
             (list (when before-break
                     (list before-break))
                   (if (and after-break
@@ -296,9 +301,9 @@ item, even if that single word is longer than CHARS-IN-LINE."
         (cl-multiple-value-bind (rest-of-line remaining-items)
             (zpresent--pull-single-title-line-helper (cdr title-list-with-combined-strings)
                                                     (- chars-in-line
-                                                       (zpresent--item-length (first title-list-with-combined-strings)))
+                                                       (zpresent--item-length (cl-first title-list-with-combined-strings)))
                                                     t)
-          (list (cons (first title-list-with-combined-strings) rest-of-line)
+          (list (cons (cl-first title-list-with-combined-strings) rest-of-line)
                 remaining-items))))))
 
 (defun zpresent--trim-item (item)
@@ -332,13 +337,13 @@ item, even if that single word is longer than CHARS-IN-LINE."
   (cond ((< (length list)
             2)
          list)
-        ((and (stringp (first list))
-              (stringp (second list)))
-         (zpresent--combine-consecutive-strings-in-list (cons (concat (first list)
-                                                                     (second list))
+        ((and (stringp (cl-first list))
+              (stringp (cl-second list)))
+         (zpresent--combine-consecutive-strings-in-list (cons (concat (cl-first list)
+                                                                     (cl-second list))
                                                              (cdr (cdr list)))))
-        (t (cons (first list)
-                 (zpresent--combine-consecutive-strings-in-list (rest list))))))
+        (t (cons (cl-first list)
+                 (zpresent--combine-consecutive-strings-in-list (cl-rest list))))))
 
 (defun zpresent--break-item (item chars-in-line &optional strict-length)
   "Break ITEM at the last whitespace before or at CHARS-IN-LINE.
@@ -401,9 +406,9 @@ the rest of the string as the second."
     (if (<= (length string)
             max-length)
         (list string nil)
-      (let ((pos-to-split-at (or (position ?\s string :from-end t :end (truncate (1+ max-length)))
+      (let ((pos-to-split-at (or (cl-position ?\s string :from-end t :end (truncate (1+ max-length)))
                                  (and (not strict-length)
-                                      (position ?\s string)))))
+                                      (cl-position ?\s string)))))
         (cond (pos-to-split-at
                (list (string-trim-right (substring string 0 pos-to-split-at))
                      (string-trim-left (substring string pos-to-split-at))))
@@ -418,7 +423,7 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
   (if (<= (length string)
           max-length)
       (list (string-trim string))
-    (let ((pos-to-split-at (position ?\s string :from-end t :end max-length)))
+    (let ((pos-to-split-at (cl-position ?\s string :from-end t :end max-length)))
       (if pos-to-split-at
           (cons (string-trim (substring string 0 pos-to-split-at))
                 (zpresent--split-at-space (string-trim (substring string pos-to-split-at)) max-length))
@@ -474,7 +479,7 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
   (let ((chars-in-line (/ (window-width)
                           (face-attribute 'zpresent-h1 :height nil t))))
     (dolist (title-line (if (equal 1 (length title))
-                            (zpresent--break-title-into-lines (first title) (* chars-in-line
+                            (zpresent--break-title-into-lines (cl-first title) (* chars-in-line
                                                                               zpresent-long-title-cutoff))
                           title))
       (zpresent--insert-title-line title-line t chars-in-line))))
