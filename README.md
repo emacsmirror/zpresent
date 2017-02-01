@@ -7,7 +7,9 @@ zpresent.el is a package to present from within Emacs.
 
 ### Basics
 
-The zpresent input file is an org-mode file. Each top-level headline (that is, a line beginning with a single asterisk) is the start of a new slide. The title for that slide is the headline.
+The zpresent input file is an org-mode file. Each top-level headline (that is, a line beginning with a single asterisk) is the start of a new slide. The title for that slide is the headline. Each nested item under that headline is a new row in the slide.
+
+To present an org file, open that file, then run `#'zpresent`.
 
 ### Example 1
 
