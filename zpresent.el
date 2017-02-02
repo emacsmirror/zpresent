@@ -107,9 +107,8 @@
   (font-lock-mode 0)
   (zpresent-mode)
 
-  ;;this /toggles/; i.e., if it's fullscreen already, un-full-screens it.
   (when zpresent-fullscreen-on-zpresentation
-    (toggle-frame-fullscreen))
+    (set-frame-parameter nil 'fullscreen 'fullboth))
 
   (when zpresent-delete-other-windows
     (delete-other-windows))
