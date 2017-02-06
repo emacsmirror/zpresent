@@ -85,6 +85,9 @@
 (defvar zpresent-delete-other-windows t
   "Whether to delete other windows when starting a presentation.")
 
+(defvar zpresent-align-title 'left
+  "How to align lines in the title.  Possible values are 'left, 'right, 'center.")
+
 
 ;;;; Faces:
 ;;zck make scaling function just change zpresent-base, not the faces in zpresent-faces.
@@ -475,20 +478,52 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
 
 (defun zpresent--insert-title (title)
   "Insert TITLE into the buffer."
-  (let ((chars-in-line (/ (window-width)
-                          (face-attribute 'zpresent-h1 :height nil t))))
-    (dolist (title-line (if (equal 1 (length title))
-                            (zpresent--break-title-into-lines (cl-first title) (* chars-in-line
-                                                                                  zpresent-long-title-cutoff))
-                          title))
-      (zpresent--insert-title-line title-line t chars-in-line))))
+  (let* ((chars-in-line (/ (window-width)
+                          (face-attribute 'zpresent-h1 :height nil t)))
+         (title-lines (if (equal 1 (length title)) ;;zck do we still need to check if it's 1 or many?
+                          (zpresent--break-title-into-lines (cl-first title) (* chars-in-line
+                                                                                zpresent-long-title-cutoff))
+                        title))
+         (whitespace-for-title (zpresent--calculate-aligned-whitespace title-lines chars-in-line))
+         (longest-line-length (apply #'max (mapcar #'zpresent--line-length title-lines))))
+    (dolist (title-line title-lines)
+      (let ((whitespace-for-this-line (cl-case zpresent-align-title
+                                        ('left whitespace-for-title)
+                                        ('center nil)
+                                        ('right (concat whitespace-for-title
+                                                        (make-string (- longest-line-length
+                                                                        (zpresent--line-length title-line))
+                                                                     ?\s))))))
+        (zpresent--insert-title-line title-line chars-in-line whitespace-for-this-line)))))
 
-(defun zpresent--insert-title-line (title-line on-one-line chars-in-line)
+
+(defun zpresent--calculate-aligned-whitespace (title chars-in-line)
+  "Return the whitespace for a TITLE.
+
+TITLE is a list of rows, and is presented aligned in a row of
+length CHARS-IN-LINE.."
+  ;;Add one here so that we round away from zero. We want to have more whitespace on the left than the right side.
+  ;;zck is this what's wanted?
+  (make-string (truncate (1+ (- chars-in-line
+                                (zpresent--find-longest-line-length title)))
+                         2)
+               ?\s))
+
+(defun zpresent--find-longest-line-length (lines)
+  "Find the length of the longest line in LINES."
+  (apply #'max
+         (mapcar #'zpresent--line-length
+                 lines)))
+
+(defun zpresent--insert-title-line (title-line chars-in-line &optional precalculated-whitespace)
   "Insert TITLE-LINE into the buffer.
 
-If ON-ONE-LINE is t, insert the title all on one line.  Otherwise, it
-might get split if it's longer than CHARS-IN-LINE."
-  (insert (zpresent--whitespace-for-title-line title-line chars-in-line))
+CHARS-IN-LINE is the length of the line.  If PRECALCULATED-WHITESPACE
+is provided, pad all the lines by that amount.  Otherwise, center the
+title-line."
+  (if precalculated-whitespace
+      (insert (propertize precalculated-whitespace 'face 'zpresent-h1))
+    (insert (zpresent--whitespace-for-centered-title-line title-line chars-in-line)))
   (dolist (title-item title-line)
     (zpresent--insert-title-item title-item))
   (insert "\n"))
@@ -520,7 +555,7 @@ might get split if it's longer than CHARS-IN-LINE."
     ;;zck why isn't this inserting images from the internet ok? Should it?
     (insert-image (create-image realpath))))
 
-(defun zpresent--whitespace-for-title-line (title-line chars-in-line)
+(defun zpresent--whitespace-for-centered-title-line (title-line chars-in-line)
   "Get whitespace for TITLE-LINE.
 
 This method assumes TITLE-LINE will not be split, and the window to be

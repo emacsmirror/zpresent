@@ -164,56 +164,87 @@
                                       1))))
 
 
-(ert-deftest whitespace-for-title-line/empty-string ()
+(ert-deftest calculate-aligned-whitespace/single-string ()
+  ;;3 on left; 3 on right
+  (should (equal 3
+                 (length (zpresent--calculate-aligned-whitespace '(("123"))
+                                                                 9)))))
+
+(ert-deftest calculate-aligned-whitespace/single-row ()
+  (should (equal 4
+                 (length (zpresent--calculate-aligned-whitespace '(("12" "34"))
+                                                                 12)))))
+
+(ert-deftest calculate-aligned-whitespace/three-rows ()
+  (should (equal 4
+                 (length (zpresent--calculate-aligned-whitespace '(("12" "3")
+                                                                   ("1" "234")
+                                                                   ("12"))
+                                                                 12)))))
+
+(ert-deftest calculate-aligned-whitespace/with-link ()
+  (should (equal 3
+                 (length (zpresent--calculate-aligned-whitespace (list (list (org-parser--make-link-hash "http://example.com" "1 3") "45")
+                                                                       (list "123"))
+                                                                 11)))))
+
+(ert-deftest calculate-aligned-whitespace/uneven-padding ()
+  ;;3 on left, 2 on right
+  (should (equal 3
+                 (length (zpresent--calculate-aligned-whitespace '(("123"))
+                                                                 8)))))
+
+
+(ert-deftest whitespace-for-centered-title-line/empty-string ()
   (should (equal 1
-                 (length (zpresent--whitespace-for-title-line '("")
-                                                              2)))))
+                 (length (zpresent--whitespace-for-centered-title-line '("")
+                                                                       2)))))
 
-(ert-deftest whitespace-for-title-line/empty-string-face ()
+(ert-deftest whitespace-for-centered-title-line/empty-string-face ()
   (should (equal 'zpresent-h1
-                 (get-text-property 0 'face (zpresent--whitespace-for-title-line '("")
-                                                                                 2)))))
+                 (get-text-property 0 'face (zpresent--whitespace-for-centered-title-line '("")
+                                                                                          2)))))
 
-(ert-deftest whitespace-for-title-line/single-string ()
+(ert-deftest whitespace-for-centered-title-line/single-string ()
   (should (equal 2
-                 (length (zpresent--whitespace-for-title-line '("hi mom")
-                                                              10)))))
+                 (length (zpresent--whitespace-for-centered-title-line '("hi mom")
+                                                                       10)))))
 
-(ert-deftest whitespace-for-title-line/single-string-face ()
+(ert-deftest whitespace-for-centered-title-line/single-string-face ()
   (should (equal 'zpresent-h1
-                 (get-text-property 0 'face (zpresent--whitespace-for-title-line '("hi mom")
-                                                                                 10)))))
+                 (get-text-property 0 'face (zpresent--whitespace-for-centered-title-line '("hi mom")
+                                                                                          10)))))
 
-(ert-deftest whitespace-for-title-line/multiple-strings ()
+(ert-deftest whitespace-for-centered-title-line/multiple-strings ()
   ;; title is length 18.
   ;; 7 spaces of padding total, so 3 on the left.
   (should (equal 3
-                 (length (zpresent--whitespace-for-title-line '("hi mom" " I'm a title")
-                                                              25)))))
+                 (length (zpresent--whitespace-for-centered-title-line '("hi mom" " I'm a title")
+                                                                       25)))))
 
-(ert-deftest whitespace-for-title-line/with-link ()
+(ert-deftest whitespace-for-centered-title-line/with-link ()
   (should (equal 3
-                 (length (zpresent--whitespace-for-title-line `("hi mom "
-                                                                ,(org-parser--make-link-hash "http://example.com" "I'm a")
-                                                                " title")
-                                                              25)))))
+                 (length (zpresent--whitespace-for-centered-title-line `("hi mom "
+                                                                         ,(org-parser--make-link-hash "http://example.com" "I'm a")
+                                                                         " title")
+                                                                       25)))))
 
-(ert-deftest whitespace-for-title-line/no-whitespace ()
+(ert-deftest whitespace-for-centered-title-line/no-whitespace ()
   (should (equal 0
-                 (length (zpresent--whitespace-for-title-line '("hi mom" " I'm a title")
-                                                              18)))))
+                 (length (zpresent--whitespace-for-centered-title-line '("hi mom" " I'm a title")
+                                                                       18)))))
 
-(ert-deftest whitespace-for-title-line/title-too-long ()
+(ert-deftest whitespace-for-centered-title-line/title-too-long ()
   (should (equal 0
-                 (length (zpresent--whitespace-for-title-line '("hi mom" " I'm a title")
-                                                              10)))))
+                 (length (zpresent--whitespace-for-centered-title-line '("hi mom" " I'm a title")
+                                                                       10)))))
 
-(ert-deftest whitespace-for-title-line/tons-of-space ()
+(ert-deftest whitespace-for-centered-title-line/tons-of-space ()
   ;; title is length 12
   ;; 18 spaces of padding total, so 9 on the left.
   (should (equal 9
-                 (length (zpresent--whitespace-for-title-line '("I'm a title!")
-                                                              30)))))
+                 (length (zpresent--whitespace-for-centered-title-line '("I'm a title!")
+                                                                       30)))))
 
 
 
