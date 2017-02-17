@@ -20,11 +20,11 @@
   (should-not (gethash 'body (zpresent--make-slide "I'm the title!"))))
 
 (ert-deftest make-slide/title-only/proper-things-added ()
-  (should (equal 2
+  (should (equal 3
                  (hash-table-count (zpresent--make-slide "I'm the title!")))))
 
 (ert-deftest make-slide/body/no-body ()
-  (should (equal "I'm a body"
+  (should (equal '("I'm a body")
                  (gethash 'body (zpresent--make-slide "I'm the title!" "I'm a body")))))
 
 (ert-deftest make-slide/body/no-body ()
@@ -32,27 +32,27 @@
                  (hash-table-count (zpresent--make-slide "I'm the title!" "I'm a body")))))
 
 
-(ert-deftest extend-slide/original-slide-not-updated ()
+(ert-deftest make-following-slide/original-slide-not-updated ()
   (let* ((original-slide (zpresent--make-slide "I'm the title!"))
-         (new-slide (zpresent--extend-slide original-slide (car (org-parser-parse-string "* New body text.")) 1 0)))
-    (should (equal 2 (hash-table-count original-slide)))
+         (new-slide (zpresent--make-following-slide original-slide (car (org-parser-parse-string "* New body text.")) 1 0)))
+    (should (equal 3 (hash-table-count original-slide)))
     (should-not (gethash 'body original-slide))))
 
-(ert-deftest extend-slide/check-title ()
+(ert-deftest make-following-slide/check-title ()
   (let* ((original-slide (zpresent--make-slide "I'm the title!"))
-         (new-slide (zpresent--extend-slide original-slide (car (org-parser-parse-string "* New body text.")) 1 0)))
+         (new-slide (zpresent--make-following-slide original-slide (car (org-parser-parse-string "* New body text.")) 1 0)))
     (should (equal "I'm the title!"
                    (gethash 'title new-slide)))))
 
-(ert-deftest extend-slide/check-new-body ()
+(ert-deftest make-following-slide/check-new-body ()
   (let* ((original-slide (zpresent--make-slide "I'm the title!"))
-         (new-slide (zpresent--extend-slide original-slide (car (org-parser-parse-string "* New body text.")) 1 0)))
+         (new-slide (zpresent--make-following-slide original-slide (car (org-parser-parse-string "* New body text.")) 1 0)))
     (should (equal '((" ▸ " "New body text."))
                    (gethash 'body new-slide)))))
 
-(ert-deftest extend-slide/check-added-body ()
+(ert-deftest make-following-slide/check-added-body ()
   (let* ((original-slide (zpresent--make-slide "I'm the title!" "Initial body."))
-         (new-slide (zpresent--extend-slide original-slide (car (org-parser-parse-string "* New body text.")) 1 0)))
+         (new-slide (zpresent--make-following-slide original-slide (car (org-parser-parse-string "* New body text.")) 1 0)))
     (should (equal '("Initial body." (" ▸ " "New body text."))
                    (gethash 'body new-slide)))))
 
@@ -1008,5 +1008,99 @@
 (ert-deftest format-recursively/single-body ()
   (should (equal '((" ▸ " "the body here"))
                  (gethash 'body (second (zpresent--format-recursively (car (org-parser-parse-string "* my headline\n** the body here"))))))))
+
+
+(ert-deftest next-match/empty-list ()
+  (should-not (zpresent--next-match #'identity nil 0)))
+
+(ert-deftest next-match/start-at-zero-find-match ()
+  (should (equal 3
+                 (zpresent--next-match #'identity
+                                       '(nil nil nil t t nil t 3)
+                                       0))))
+
+(ert-deftest next-match/start-at-zero-no-match ()
+  (should-not (zpresent--next-match #'cl-oddp
+                                    '(2 8 12 -6)
+                                    0)))
+
+(ert-deftest next-match/start-in-list-no-match ()
+  (should-not (zpresent--next-match #'cl-evenp
+                                    '(0 2 4 7 9 11 313)
+                                    3)))
+
+(ert-deftest next-match/start-in-list-find-match-at-starting-point ()
+  (should (equal 5
+                 (zpresent--next-match #'cl-evenp
+                                       '(2 0 -12 27 14 42 16 9 10000004)
+                                       5))))
+
+(ert-deftest next-match/start-in-list-find-match-after-starting-point ()
+  (should (equal 6
+                 (zpresent--next-match #'cl-evenp
+                                       '(2 0 -12 27 14 41 1024 4 10000004)
+                                       5))))
+
+(ert-deftest next-match/start-in-list-find-match-long-after-starting-point ()
+  (should (equal 13
+                 (zpresent--next-match #'cl-evenp
+                                       '(2 0 -12 27 41 1 7 -12345 1 1 1 1 1 1024 4 10000004)
+                                       3))))
+
+(ert-deftest next-match/starting-point-longer-than-list ()
+  (should-not (zpresent--next-match #'identity
+                                    '(0 1 2)
+                                    3)))
+
+
+(ert-deftest previous-match/empty-list ()
+  (should-not (zpresent--previous-match #'identity
+                                        nil
+                                        0)))
+
+(ert-deftest previous-match/start-at-end-find-match ()
+  (should (equal 3
+                 (zpresent--previous-match #'cl-evenp
+                                           '(0 2 4 6 7 9 11)
+                                           6))))
+(ert-deftest previous-match/start-at-end-no-match ()
+  (should-not (zpresent--previous-match #'cl-evenp
+                                        '(1 3 5 7 9 11 13)
+                                        6)))
+
+(ert-deftest previous-match/dont-match-after-starting-point ()
+  (should-not (zpresent--previous-match #'cl-evenp
+                                        '(1 3 5 7 9 10 12 14 16)
+                                        5)))
+
+(ert-deftest previous-match/match-at-starting-point ()
+  (should (equal 3
+                 (zpresent--previous-match #'cl-evenp
+                                           '(0 1 3 4 6)
+                                           3))))
+
+(ert-deftest previous-match/match-before-starting-point ()
+  (should (equal 4
+                 (zpresent--previous-match #'cl-evenp
+                                           '(1 3 5 7 8 9 11)
+                                           5))))
+
+(ert-deftest previous-match/match-far-before-starting-point ()
+  (should (equal 3
+                 (zpresent--previous-match #'cl-evenp
+                                           '(1 3 5 6 7 9 11 13 15 17 19 21 23 25 27 29 31 33)
+                                           15))))
+
+(ert-deftest previous-match/starting-point-beyond-end-of-list ()
+  (should (equal 2
+                 (zpresent--previous-match #'cl-evenp
+                                           '(1 3 4 7)
+                                           104))))
+
+
+
+
+
+
 
 ;;; tests.el ends here

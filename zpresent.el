@@ -21,7 +21,7 @@
 
 ;; Homepage: https://bitbucket.org/zck/zpresent.el
 
-;; Package-Requires: ((emacs "25.1") (org-parser "0.1"))
+;; Package-Requires: ((emacs "25.1") (org-parser "0.1") (dash "2.13.0"))
 
 ;; Keywords: comm
 
@@ -43,6 +43,10 @@
   (define-key zpresent-mode-map (kbd "C-p") #'zpresent--previous-slide)
   (define-key zpresent-mode-map (kbd "<left>") #'zpresent--previous-slide)
   (define-key zpresent-mode-map (kbd "<up>") #'zpresent--previous-slide)
+  (define-key zpresent-mode-map (kbd "<next>") #'zpresent--next-checkpoint-slide)
+  (define-key zpresent-mode-map (kbd "N") #'zpresent--next-checkpoint-slide)
+  (define-key zpresent-mode-map (kbd "<prior>") #'zpresent--previous-checkpoint-slide)
+  (define-key zpresent-mode-map (kbd "P") #'zpresent--previous-checkpoint-slide)
   (define-key zpresent-mode-map (kbd "<home>") #'zpresent--first-slide)
   (define-key zpresent-mode-map (kbd "<end>") #'zpresent--last-slide)
   (define-key zpresent-mode-map (kbd "C-+") #'zpresent--increase-text-size)
@@ -145,7 +149,7 @@ Return the list of slides."
     (dolist (cur-child (gethash :children structure))
       (setq slides-list
             (append slides-list
-                    (zpresent--format-recursively-helper cur-child (zpresent--extend-slide most-recent-slide cur-child level how-many-slides) (1+ level))))
+                    (zpresent--format-recursively-helper cur-child (zpresent--make-following-slide most-recent-slide cur-child level how-many-slides) (1+ level))))
       (setq most-recent-slide (car (last slides-list)))
       (cl-incf how-many-slides))
     slides-list))
@@ -203,16 +207,21 @@ indicate something other than plain text.  For example, an image."
 If BODY is present, add it as the body of the slide.  Otherwise, the
 slide is created with an empty body."
   (let ((slide (make-hash-table)))
+    (puthash 'checkpoint t slide)
     (puthash 'title title slide)
     (puthash 'body (if body (list body) nil) slide)
     slide))
 
-(defun zpresent--extend-slide (slide structure level &optional prior-siblings)
+(defun zpresent--make-following-slide (slide structure level &optional prior-siblings)
   "Extend SLIDE with the contents of STRUCTURE, at level LEVEL.
 
 PRIOR-SIBLINGS is the number of structures at the same level before
 STRUCTURE with the same parent."
   (let ((new-slide (copy-hash-table slide)))
+
+    (puthash 'checkpoint
+             nil
+             new-slide)
     (puthash 'body
              (append (gethash 'body slide)
                      (zpresent--make-body structure level (or prior-siblings 0)))
@@ -459,6 +468,43 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
            0)
     (cl-decf zpresent-position)
     (zpresent--slide (elt zpresent-slides zpresent-position))))
+
+(defun zpresent--next-checkpoint-slide ()
+  "Move to the next checkpoint slide.
+
+A checkpoint slide is one with the attribute 'checkpoint.  It's used,
+for example, for the first slide of each top level org element."
+  (interactive)
+  (let ((checkpoint-position (zpresent--next-match (lambda (slide) (gethash 'checkpoint slide))
+                                                   zpresent-slides
+                                                   (1+ zpresent-position))))
+    (when checkpoint-position
+      (setq zpresent-position checkpoint-position)
+      (zpresent--slide (elt zpresent-slides checkpoint-position)))))
+
+(defun zpresent--previous-checkpoint-slide ()
+  "Move to the previous checkpoint slide.
+
+A checkpoint slide is one with the attribute 'checkpoint.  It's used,
+for example, for the first slide of each top level org element."
+  (interactive)
+  (let ((checkpoint-position (zpresent--previous-match (lambda (slide) (gethash 'checkpoint slide))
+                                                       zpresent-slides
+                                                       (1- zpresent-position))))
+    (when checkpoint-position
+      (setq zpresent-position checkpoint-position)
+      (zpresent--slide (elt zpresent-slides checkpoint-position)))))
+
+(defun zpresent--next-match (pred list starting-point)
+  "Find the first element that PRED considers truthy in LIST, starting at STARTING-POINT."
+  (when-let (additional-places (-find-index pred
+                                            (nthcdr starting-point list)))
+    (+ starting-point additional-places)))
+
+(defun zpresent--previous-match (pred list ending-point)
+  "Find the last element that PRED considers truthy in LIST before ENDING-POINT."
+  (-find-last-index pred
+                    (cl-subseq list 0 (min (1+ ending-point) (length list)))))
 
 (defun zpresent--slide (slide)
   "Present SLIDE."
