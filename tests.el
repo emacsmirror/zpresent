@@ -23,13 +23,12 @@
   (should (equal 3
                  (hash-table-count (zpresent--make-slide "I'm the title!")))))
 
-(ert-deftest make-slide/body/no-body ()
-  (should (equal '("I'm a body")
-                 (gethash 'body (zpresent--make-slide "I'm the title!" "I'm a body")))))
+(ert-deftest make-slide/no-body ()
+  (should-not (gethash 'body (zpresent--make-slide "I'm the title!"))))
 
-(ert-deftest make-slide/body/no-body ()
-  (should (equal 2
-                 (hash-table-count (zpresent--make-slide "I'm the title!" "I'm a body")))))
+(ert-deftest make-slide/body ()
+    (should (equal '("I'm a body")
+                 (gethash 'body (zpresent--make-slide "I'm the title!" "I'm a body")))))
 
 
 (ert-deftest make-following-slide/original-slide-not-updated ()
