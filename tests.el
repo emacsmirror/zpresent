@@ -1009,90 +1009,120 @@
                  (gethash 'body (second (zpresent--format-recursively (car (org-parser-parse-string "* my headline\n** the body here"))))))))
 
 
-(ert-deftest next-match/empty-list ()
-  (should-not (zpresent--next-match #'identity nil 0)))
+(ert-deftest find-forwards/empty-list ()
+  (should-not (zpresent--find-forwards #'identity nil 0)))
 
-(ert-deftest next-match/start-at-zero-find-match ()
+(ert-deftest find-forwards/start-at-zero-find-match ()
   (should (equal 3
-                 (zpresent--next-match #'identity
-                                       '(nil nil nil t t nil t 3)
-                                       0))))
+                 (zpresent--find-forwards #'identity
+                                          '(nil nil nil t t nil t 3)
+                                          0))))
 
-(ert-deftest next-match/start-at-zero-no-match ()
-  (should-not (zpresent--next-match #'cl-oddp
-                                    '(2 8 12 -6)
-                                    0)))
+(ert-deftest find-forwards/start-at-zero-no-match ()
+  (should-not (zpresent--find-forwards #'cl-oddp
+                                       '(2 8 12 -6)
+                                       0)))
 
-(ert-deftest next-match/start-in-list-no-match ()
-  (should-not (zpresent--next-match #'cl-evenp
-                                    '(0 2 4 7 9 11 313)
-                                    3)))
+(ert-deftest find-forwards/start-in-list-no-match ()
+  (should-not (zpresent--find-forwards #'cl-evenp
+                                       '(0 2 4 7 9 11 313)
+                                       3)))
 
-(ert-deftest next-match/start-in-list-find-match-at-starting-point ()
+(ert-deftest find-forwards/match-at-starting-point ()
+  (should (equal 3
+                 (zpresent--find-forwards #'cl-evenp
+                                          '(0 2 4 6 8 10)
+                                          3))))
+
+(ert-deftest find-forwards/start-in-list-find-match-at-starting-point ()
   (should (equal 5
-                 (zpresent--next-match #'cl-evenp
-                                       '(2 0 -12 27 14 42 16 9 10000004)
-                                       5))))
+                 (zpresent--find-forwards #'cl-evenp
+                                          '(2 0 -12 28 14 42 16 9 10000004)
+                                          5))))
 
-(ert-deftest next-match/start-in-list-find-match-after-starting-point ()
+(ert-deftest find-forwards/start-in-list-find-match-after-starting-point ()
   (should (equal 6
-                 (zpresent--next-match #'cl-evenp
-                                       '(2 0 -12 27 14 41 1024 4 10000004)
-                                       5))))
+                 (zpresent--find-forwards #'cl-evenp
+                                          '(2 0 -12 28 14 41 1024 4 10000004)
+                                          5))))
 
-(ert-deftest next-match/start-in-list-find-match-long-after-starting-point ()
+(ert-deftest find-forwards/start-in-list-find-match-long-after-starting-point ()
   (should (equal 13
-                 (zpresent--next-match #'cl-evenp
-                                       '(2 0 -12 27 41 1 7 -12345 1 1 1 1 1 1024 4 10000004)
-                                       3))))
+                 (zpresent--find-forwards #'cl-evenp
+                                          '(2 0 -12 27 41 1 7 -12345 1 1 1 1 1 1024 4 10000004)
+                                          3))))
 
-(ert-deftest next-match/starting-point-longer-than-list ()
-  (should-not (zpresent--next-match #'identity
-                                    '(0 1 2)
-                                    3)))
+(ert-deftest find-forwards/no-starting-point-and-found-immediately ()
+  (should (equal 0
+                 (zpresent--find-forwards #'cl-evenp
+                                          '(2 4 6 8)))))
+
+(ert-deftest find-forwards/no-starting-point-and-found-eventually ()
+  (should (equal 3
+                 (zpresent--find-forwards #'cl-evenp
+                                          '(1 3 5 6 7 9)))))
+
+(ert-deftest find-forwards/no-starting-point-and-not-found ()
+  (should-not (zpresent--find-forwards #'cl-evenp
+                                       '(1 3 5 7 9))))
+
+(ert-deftest find-forwards/starting-point-longer-than-list-not-found ()
+  (should-not (zpresent--find-forwards #'identity
+                                       '(0 1 2)
+                                       14)))
 
 
-(ert-deftest previous-match/empty-list ()
-  (should-not (zpresent--previous-match #'identity
+(ert-deftest find-backwards/empty-list ()
+  (should-not (zpresent--find-backwards #'identity
                                         nil
                                         0)))
 
-(ert-deftest previous-match/start-at-end-find-match ()
+(ert-deftest find-backwards/start-at-end-find-match ()
   (should (equal 3
-                 (zpresent--previous-match #'cl-evenp
+                 (zpresent--find-backwards #'cl-evenp
                                            '(0 2 4 6 7 9 11)
                                            6))))
-(ert-deftest previous-match/start-at-end-no-match ()
-  (should-not (zpresent--previous-match #'cl-evenp
+
+(ert-deftest find-backwards/start-at-end-no-match ()
+  (should-not (zpresent--find-backwards #'cl-evenp
                                         '(1 3 5 7 9 11 13)
                                         6)))
 
-(ert-deftest previous-match/dont-match-after-starting-point ()
-  (should-not (zpresent--previous-match #'cl-evenp
+(ert-deftest find-backwards/dont-match-after-starting-point ()
+  (should-not (zpresent--find-backwards #'cl-evenp
                                         '(1 3 5 7 9 10 12 14 16)
-                                        5)))
+                                        4)))
 
-(ert-deftest previous-match/match-at-starting-point ()
+(ert-deftest find-backwards/match-at-starting-point ()
   (should (equal 3
-                 (zpresent--previous-match #'cl-evenp
-                                           '(0 1 3 4 6)
+                 (zpresent--find-backwards #'cl-evenp
+                                           '(0 1 2 4 6)
                                            3))))
 
-(ert-deftest previous-match/match-before-starting-point ()
+(ert-deftest find-backwards/no-starting-point-but-found ()
+  (should (equal 2
+                 (zpresent--find-backwards #'cl-evenp
+                                           '(0 2 4 5)))))
+
+(ert-deftest find-backwards/no-starting-point-but-not-found ()
+  (should-not (zpresent--find-backwards #'cl-evenp
+                                        '(1 3 5 7))))
+
+(ert-deftest find-backwards/match-before-starting-point ()
   (should (equal 4
-                 (zpresent--previous-match #'cl-evenp
+                 (zpresent--find-backwards #'cl-evenp
                                            '(1 3 5 7 8 9 11)
                                            5))))
 
-(ert-deftest previous-match/match-far-before-starting-point ()
+(ert-deftest find-backwards/match-far-before-starting-point ()
   (should (equal 3
-                 (zpresent--previous-match #'cl-evenp
+                 (zpresent--find-backwards #'cl-evenp
                                            '(1 3 5 6 7 9 11 13 15 17 19 21 23 25 27 29 31 33)
                                            15))))
 
-(ert-deftest previous-match/starting-point-beyond-end-of-list ()
+(ert-deftest find-backwards/starting-point-beyond-end-of-list ()
   (should (equal 2
-                 (zpresent--previous-match #'cl-evenp
+                 (zpresent--find-backwards #'cl-evenp
                                            '(1 3 4 7)
                                            104))))
 

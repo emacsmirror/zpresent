@@ -495,16 +495,19 @@ for example, for the first slide of each top level org element."
       (setq zpresent-position checkpoint-position)
       (zpresent--slide (elt zpresent-slides checkpoint-position)))))
 
-(defun zpresent--next-match (pred list starting-point)
-  "Find the first element that PRED considers truthy in LIST, starting at STARTING-POINT."
+
+(cl-defun zpresent--find-forwards (pred list &optional (starting-point 0))
+  "Find the first element that PRED considers truthy in LIST at or after STARTING-POINT."
   (when-let (additional-places (-find-index pred
                                             (nthcdr starting-point list)))
     (+ starting-point additional-places)))
 
-(defun zpresent--previous-match (pred list ending-point)
-  "Find the last element that PRED considers truthy in LIST before ENDING-POINT."
+(cl-defun zpresent--find-backwards (pred list &optional (ending-point (length list)))
+  "Find the last element that PRED considers truthy in LIST at or before ENDING-POINT."
   (-find-last-index pred
-                    (cl-subseq list 0 (min (1+ ending-point) (length list)))))
+                    (cl-subseq list
+                               0
+                               (min (1+ ending-point) (length list)))))
 
 (defun zpresent--slide (slide)
   "Present SLIDE."
