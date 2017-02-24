@@ -193,6 +193,9 @@
                  (length (zpresent--calculate-aligned-whitespace '(("123"))
                                                                  8)))))
 
+(ert-deftest calculate-aligned-whitespace/too-long-line ()
+  (should (string-empty-p (zpresent--calculate-aligned-whitespace '(("foo bar baz bif bof flam zip zap zop")) 12))))
+
 
 (ert-deftest whitespace-for-centered-title-line/empty-string ()
   (should (equal 1

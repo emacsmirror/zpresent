@@ -553,8 +553,9 @@ TITLE is a list of rows, and is presented aligned in a row of
 length CHARS-IN-LINE.."
   ;;Add one here so that we round away from zero. We want to have more whitespace on the left than the right side.
   ;;zck is this what's wanted?
-  (make-string (truncate (1+ (- chars-in-line
-                                (zpresent--find-longest-line-length title)))
+  (make-string (truncate (max 0
+                              (1+ (- chars-in-line
+                                     (zpresent--find-longest-line-length title))))
                          2)
                ?\s))
 
