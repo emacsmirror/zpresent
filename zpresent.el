@@ -21,7 +21,7 @@
 
 ;; Homepage: https://bitbucket.org/zck/zpresent.el
 
-;; Package-Requires: ((emacs "25.1") (org-parser "0.1") (dash "2.13.0"))
+;; Package-Requires: ((emacs "25.1") (org-parser "0.2") (dash "2.13.0"))
 
 ;; Keywords: comm
 
@@ -108,7 +108,7 @@
 
   (setq zpresent-source (org-parser-parse-buffer (current-buffer)))
   (setq zpresent-position 0)
-  (setq zpresent-slides (zpresent--format zpresent-source))
+  (setq zpresent-slides (zpresent--format (-filter #'hash-table-p zpresent-source)))
 
   (switch-to-buffer "zpresentation")
   (font-lock-mode 0)
