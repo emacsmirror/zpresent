@@ -30,7 +30,6 @@
 
 ;;; TODOs:
 ;;zck why symbols here, but keywords in org-structure?
-;;zck test non-ordered non-headline lists
 
 ;;; Code:
 
@@ -227,8 +226,6 @@ STRUCTURE with the same parent."
                      (zpresent--make-body structure level (or prior-siblings 0)))
              new-slide)
     new-slide))
-
-;;zck eventually keywords? Or symbols? Who knows.
 
 (defun zpresent--break-title-into-lines (title-list chars-in-line)
   "Break TITLE-LIST into a list of lines, each line shorter than CHARS-IN-LINE.
@@ -528,8 +525,8 @@ for example, for the first slide of each top level org element."
 (defun zpresent--insert-title (title)
   "Insert TITLE into the buffer."
   (let* ((chars-in-line (/ (window-width)
-                          (face-attribute 'zpresent-h1 :height nil t)))
-         (title-lines (if (equal 1 (length title)) ;;zck do we still need to check if it's 1 or many?
+                           (face-attribute 'zpresent-h1 :height nil t)))
+         (title-lines (if (equal 1 (length title))
                           (zpresent--break-title-into-lines (cl-first title) (* chars-in-line
                                                                                 zpresent-long-title-cutoff))
                         title))
