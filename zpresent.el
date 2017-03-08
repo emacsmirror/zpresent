@@ -60,6 +60,7 @@
 (require 'org-parser)
 (require 'subr-x)
 (require 'cl-lib)
+(require 'dash)
 
 ;;;; Variables:
 (defvar zpresent-slides nil
