@@ -126,16 +126,16 @@
 
 (defun zpresent--format (structure-list)
   "Convert an STRUCTURE-LIST into a list of slides."
-  (cl-mapcan #'zpresent--format-recursively
+  (cl-mapcan #'zpresent--format-structure
              structure-list))
 
-(defun zpresent--format-recursively (structure)
+(defun zpresent--format-structure (structure)
   "Convert STRUCTURE into a list of slides."
-  (zpresent--format-recursively-helper structure
-                                       (zpresent--make-top-level-slide structure)
-                                       1))
+  (zpresent--format-structure-helper structure
+                                     (zpresent--make-top-level-slide structure)
+                                     1))
 
-(defun zpresent--format-recursively-helper (structure slide-so-far level)
+(defun zpresent--format-structure-helper (structure slide-so-far level)
   "Convert STRUCTURE into a list of slides.
 
 SLIDE-SO-FAR is the built-up slide to append text in the body to.
@@ -149,7 +149,7 @@ Return the list of slides."
     (dolist (cur-child (gethash :children structure))
       (setq slides-list
             (append slides-list
-                    (zpresent--format-recursively-helper cur-child (zpresent--make-following-slide most-recent-slide cur-child level how-many-slides) (1+ level))))
+                    (zpresent--format-structure-helper cur-child (zpresent--make-following-slide most-recent-slide cur-child level how-many-slides) (1+ level))))
       (setq most-recent-slide (car (last slides-list)))
       (cl-incf how-many-slides))
     slides-list))
