@@ -687,6 +687,14 @@ If you want to insert an image, use '#'zpresent--insert-image'."
 
   (zpresent--redisplay))
 
+
+(defun zpresent--hash-contains? (hash key)
+  "Return t if HASH, a hash table, has KEY."
+  (let ((unique-key (gensym)))
+    (not (equal (gethash key hash unique-key)
+                unique-key))))
+
+
 (provide 'zpresent)
 
 ;;; zpresent.el ends here

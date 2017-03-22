@@ -1131,6 +1131,19 @@
 
 
 
+(ert-deftest hash-contains/empty-hash ()
+  (should-not (zpresent--hash-contains? (make-hash-table) "foo")))
+
+(ert-deftest hash-contains/containing-hash ()
+  (let ((hash (make-hash-table)))
+    (puthash 'foo 'bar hash)
+    (should (zpresent--hash-contains? hash 'foo))))
+
+(ert-deftest hash-contains/not-containing-hash ()
+  (let ((hash (make-hash-table)))
+    (puthash 'foo 'bar hash)
+    (should-not (zpresent--hash-contains? hash 'nope))))
+
 
 
 
