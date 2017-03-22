@@ -12,6 +12,10 @@
 ;;                                                                                                'body nil)
 ;;                                                                               nil)))))
 
+
+(defconst required-slide-keys '(type body title checkpoint))
+
+
 (ert-deftest make-slide/title-only/check-title ()
   (should (equal "I'm the title!"
                  (gethash 'title (zpresent--make-slide "I'm the title!")))))
@@ -20,8 +24,11 @@
   (should-not (gethash 'body (zpresent--make-slide "I'm the title!"))))
 
 (ert-deftest make-slide/title-only/proper-things-added ()
-  (should (equal 3
-                 (hash-table-count (zpresent--make-slide "I'm the title!")))))
+  (let ((slide (zpresent--make-slide "I'm the title!")))
+    (should (equal (length required-slide-keys)
+                   (hash-table-count slide)))
+    (dolist (key required-slide-keys)
+      (zpresent--hash-contains? slide key))))
 
 (ert-deftest make-slide/no-body ()
   (should-not (gethash 'body (zpresent--make-slide "I'm the title!"))))
@@ -33,9 +40,13 @@
 
 (ert-deftest make-following-slide/original-slide-not-updated ()
   (let* ((original-slide (zpresent--make-slide "I'm the title!"))
+         (original-copy (copy-hash-table original-slide))
          (new-slide (zpresent--make-following-slide original-slide (car (org-parser-parse-string "* New body text.")) 1 0)))
-    (should (equal 3 (hash-table-count original-slide)))
-    (should-not (gethash 'body original-slide))))
+    (dolist (key (hash-table-keys original-slide))
+      (should (equal (gethash key original-slide)
+                     (gethash key original-copy))))
+    (should (equal (hash-table-count original-slide)
+                   (hash-table-count original-copy)))))
 
 (ert-deftest make-following-slide/check-title ()
   (let* ((original-slide (zpresent--make-slide "I'm the title!"))
