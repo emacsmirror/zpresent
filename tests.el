@@ -1002,14 +1002,14 @@
 
 
 
-(ert-deftest format-recursively/single-headline ()
+(ert-deftest format-structure/single-headline ()
   (should (equal '(("my headline"))
-                 (gethash 'title (first (zpresent--format-recursively (car (org-parser-parse-string "* my headline"))))))))
+                 (gethash 'title (first (zpresent--format-structure (car (org-parser-parse-string "* my headline"))))))))
 
 
-(ert-deftest format-recursively/single-body ()
+(ert-deftest format-structure/single-body ()
   (should (equal '((" ▸ " "the body here"))
-                 (gethash 'body (second (zpresent--format-recursively (car (org-parser-parse-string "* my headline\n** the body here"))))))))
+                 (gethash 'body (second (zpresent--format-structure (car (org-parser-parse-string "* my headline\n** the body here"))))))))
 
 
 (ert-deftest find-forwards/empty-list ()
