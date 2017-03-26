@@ -213,20 +213,10 @@
                  (length (zpresent--whitespace-for-centered-title-line '("")
                                                                        2)))))
 
-(ert-deftest whitespace-for-centered-title-line/empty-string-face ()
-  (should (equal 'zpresent-h1
-                 (get-text-property 0 'face (zpresent--whitespace-for-centered-title-line '("")
-                                                                                          2)))))
-
 (ert-deftest whitespace-for-centered-title-line/single-string ()
   (should (equal 2
                  (length (zpresent--whitespace-for-centered-title-line '("hi mom")
                                                                        10)))))
-
-(ert-deftest whitespace-for-centered-title-line/single-string-face ()
-  (should (equal 'zpresent-h1
-                 (get-text-property 0 'face (zpresent--whitespace-for-centered-title-line '("hi mom")
-                                                                                          10)))))
 
 (ert-deftest whitespace-for-centered-title-line/multiple-strings ()
   ;; title is length 18.

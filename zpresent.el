@@ -97,7 +97,8 @@
 ;;zck make scaling function just change zpresent-base, not the faces in zpresent-faces.
 ;;zck why doesn't this center properly anymore?
 (defface zpresent-base '((t . (:height 4.0))) "The base face, so we can manage changing sizes only by changing this face." :group 'zpresent-faces)
-(defface zpresent-h1 '((t . (:height 1.0 :inherit zpresent-base))) "Face for titles." :group 'zpresent-faces)
+(defface zpresent-h1 '((t . (:height 1.0 :inherit zpresent-base))) "Face for the title of a regular slide." :group 'zpresent-faces)
+(defface zpresent-title-slide-title '((t . (:height 1.5 :inherit zpresent-base))) "Face for titles in a title slide." :group 'zpresent-faces)
 (defface zpresent-body '((t . (:height 0.66 :inherit zpresent-base))) "Face for the body." :group 'zpresent-faces)
 
 ;;;; Actual code:
@@ -156,7 +157,12 @@ Return the list of slides."
 
 (defun zpresent--make-top-level-slide (structure)
   "Make a top level slide from STRUCTURE."
-  (zpresent--make-slide (zpresent--extract-current-text structure)))
+  (let ((slide (zpresent--make-slide (zpresent--extract-current-text structure)))
+        (type (assoc "type" (gethash :properties structure))))
+    (when (and type
+               (equal "title" (string-trim (cdr type))))
+      (puthash 'type 'title slide))
+    slide))
 
 ;;zck test how this interacts with indentation/centering, if it does
 (defun zpresent--extract-current-text (structure)
@@ -210,6 +216,8 @@ slide is created with an empty body."
     (puthash 'checkpoint t slide)
     (puthash 'title title slide)
     (puthash 'body (if body (list body) nil) slide)
+
+    (puthash 'type 'normal slide)
     slide))
 
 (defun zpresent--make-following-slide (slide structure level &optional prior-siblings)
@@ -509,6 +517,13 @@ for example, for the first slide of each top level org element."
 
 (defun zpresent--slide (slide)
   "Present SLIDE."
+  (if (equal (gethash 'type slide)
+             'title)
+      (zpresent--present-title-slide slide)
+    (zpresent--present-normal-slide slide)))
+
+(defun zpresent--present-normal-slide (slide)
+  "Present SLIDE as a normal (read: non-title) slide."
   (interactive)
   (switch-to-buffer "zpresentation")
   (buffer-disable-undo "zpresentation")
@@ -516,17 +531,30 @@ for example, for the first slide of each top level org element."
     (erase-buffer)
     (insert "\n")
     (when (gethash 'title slide)
-      (zpresent--insert-title (gethash 'title slide))
+      (zpresent--insert-title (gethash 'title slide) 'zpresent-h1)
       (insert "\n"))
     (when (gethash 'body slide)
       (dolist (body-item (gethash 'body slide))
         (zpresent--insert-body-item body-item)
         (insert "\n")))))
 
-(defun zpresent--insert-title (title)
-  "Insert TITLE into the buffer."
-  (let* ((chars-in-line (/ (window-width)
-                           (face-attribute 'zpresent-h1 :height nil t)))
+(defun zpresent--present-title-slide (slide)
+  "Present SLIDE as a title slide."
+  (switch-to-buffer "zpresentation")
+  (buffer-disable-undo "zpresentation")
+  (let ((inhibit-read-only t))
+    (erase-buffer)
+
+    ;;zck calculate how many lines can fit on the screen
+    ;;then how many lines in the title.
+    ;;probably try to balance lines above with lines below
+    ;;then maybe figure out what kind of extra text can go in?
+    (insert (propertize "\n\n" 'face 'zpresent-title-slide-title))
+    (zpresent--insert-title (gethash 'title slide) 'zpresent-title-slide-title)))
+
+(defun zpresent--insert-title (title face)
+  "Insert TITLE into the buffer with face FACE."
+  (let* ((chars-in-line (zpresent--calculate-window-width-in-chars face))
          (title-lines (if (equal 1 (length title))
                           (zpresent--break-title-into-lines (cl-first title) (* chars-in-line
                                                                                 zpresent-long-title-cutoff))
@@ -541,8 +569,12 @@ for example, for the first slide of each top level org element."
                                                         (make-string (- longest-line-length
                                                                         (zpresent--line-length title-line))
                                                                      ?\s))))))
-        (zpresent--insert-title-line title-line chars-in-line whitespace-for-this-line)))))
+        (zpresent--insert-title-line title-line face whitespace-for-this-line)))))
 
+(defun zpresent--calculate-window-width-in-chars (face)
+  "Calculate the number of characters wide the window is in face FACE."
+  (/ (window-width)
+     (face-attribute face :height nil t)))
 
 (defun zpresent--calculate-aligned-whitespace (title chars-in-line)
   "Return the whitespace for a TITLE.
@@ -563,28 +595,29 @@ length CHARS-IN-LINE.."
          (mapcar #'zpresent--line-length
                  lines)))
 
-(defun zpresent--insert-title-line (title-line chars-in-line &optional precalculated-whitespace)
-  "Insert TITLE-LINE into the buffer.
 
-CHARS-IN-LINE is the length of the line.  If PRECALCULATED-WHITESPACE
-is provided, pad all the lines by that amount.  Otherwise, center the
-title-line."
+(defun zpresent--insert-title-line (title-line face &optional precalculated-whitespace)
+  "Insert TITLE-LINE into the buffer with face FACE.
+
+If PRECALCULATED-WHITESPACE is provided, pad all the lines by that
+amount.  Otherwise, center the title-line."
   (if precalculated-whitespace
-      (insert (propertize precalculated-whitespace 'face 'zpresent-h1))
-    (insert (zpresent--whitespace-for-centered-title-line title-line chars-in-line)))
+      (insert (propertize precalculated-whitespace 'face face))
+    (insert (propertize (zpresent--whitespace-for-centered-title-line title-line face) 'face face)))
   (dolist (title-item title-line)
-    (zpresent--insert-title-item title-item))
+    (zpresent--insert-title-item title-item face))
   (insert "\n"))
 
-(defun zpresent--insert-title-item (item)
-  "Insert ITEM into the buffer as part of the title."
+;;zck Is this specific to titles?
+(defun zpresent--insert-title-item (item face)
+  "Insert ITEM into the buffer with face FACE."
   (cond ((stringp item)
          (insert (propertize item
                              'face
-                             'zpresent-h1)))
+                             face)))
         ((zpresent--item-is-image item)
          (zpresent--insert-image (gethash :target item)))
-        (t (zpresent--insert-link item 'zpresent-h1))))
+        (t (zpresent--insert-link item face))))
 
 (defun zpresent--item-is-image (item)
   "T if ITEM is an image."
@@ -604,17 +637,14 @@ title-line."
     (insert-image (create-image realpath))))
 
 (defun zpresent--whitespace-for-centered-title-line (title-line chars-in-line)
-  "Get whitespace for TITLE-LINE.
+  "Get whitespace to center TITLE-LINE in a window of width CHARS-IN-LINE.
 
-This method assumes TITLE-LINE will not be split, and the window to be
-printed into has width CHARS-IN-LINE."
+The whitespace calculation assumes no line will be split."
   (let* ((line-width (zpresent--line-length title-line))
          (chars-to-add (max 0
                             (truncate (- chars-in-line line-width)
                                       2))))
-    (propertize (make-string chars-to-add ?\s)
-                'face
-                'zpresent-h1)))
+    (make-string chars-to-add ?\s)))
 
 (defun zpresent--insert-body-item (body-item)
   "Insert BODY-ITEM into the buffer."
@@ -690,7 +720,7 @@ If you want to insert an image, use '#'zpresent--insert-image'."
 
 (defun zpresent--hash-contains? (hash key)
   "Return t if HASH, a hash table, has KEY."
-  (let ((unique-key (gensym)))
+  (let ((unique-key (cl-gensym)))
     (not (equal (gethash key hash unique-key)
                 unique-key))))
 
