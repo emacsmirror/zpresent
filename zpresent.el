@@ -542,23 +542,40 @@ for example, for the first slide of each top level org element."
   "Present SLIDE as a title slide."
   (switch-to-buffer "zpresentation")
   (buffer-disable-undo "zpresentation")
-  (let ((inhibit-read-only t))
+  (let ((inhibit-read-only t)
+        (title-lines (zpresent--get-lines-for-title (gethash 'title slide) (zpresent--calculate-window-width-in-chars 'zpresent-title-slide-title))))
     (erase-buffer)
+    (insert (propertize (make-string (zpresent--newlines-for-vertical-centering (length title-lines)
+                                                                                (zpresent--calculate-window-width-in-chars 'zpresent-title-slide-title))
+                                     ?\n)
+                        'face 'zpresent-title-slide-title))
+    (zpresent--insert-title (gethash 'title slide) 'zpresent-title-slide-title)
 
-    ;;zck calculate how many lines can fit on the screen
-    ;;then how many lines in the title.
-    ;;probably try to balance lines above with lines below
-    ;;then maybe figure out what kind of extra text can go in?
-    (insert (propertize "\n\n" 'face 'zpresent-title-slide-title))
-    (zpresent--insert-title (gethash 'title slide) 'zpresent-title-slide-title)))
+    ;;zck what other kind of things can get put in? date? "by"? How can I genericize this?
+    ))
+
+
+(defun zpresent--get-lines-for-title (title chars-in-line)
+  "Gets the lines for TITLE, when presented in a line of length CHARS-IN-LINE.
+
+This only differs from --break-title-into-lines in that it assumes a
+title that already has more than one line has been broken up by the
+user, so shouldn't be rearranged."
+  (if (equal 1 (length title))
+      (zpresent--break-title-into-lines (cl-first title)
+                                        (* chars-in-line
+                                           zpresent-long-title-cutoff))
+    title))
+
+(defun zpresent--newlines-for-vertical-centering (title-lines total-lines)
+  "Calculate how many newlines must be inserted to vertically center a title of TITLE-LINES length in a window of TOTAL-LINES length."
+  (truncate (- total-lines title-lines)
+            2))
 
 (defun zpresent--insert-title (title face)
   "Insert TITLE into the buffer with face FACE."
   (let* ((chars-in-line (zpresent--calculate-window-width-in-chars face))
-         (title-lines (if (equal 1 (length title))
-                          (zpresent--break-title-into-lines (cl-first title) (* chars-in-line
-                                                                                zpresent-long-title-cutoff))
-                        title))
+         (title-lines (zpresent--get-lines-for-title title chars-in-line))
          (whitespace-for-title (zpresent--calculate-aligned-whitespace title-lines chars-in-line))
          (longest-line-length (apply #'max (mapcar #'zpresent--line-length title-lines))))
     (dolist (title-line title-lines)

@@ -395,6 +395,24 @@
                  (zpresent--break-title-into-lines '("Hi mom I'm cool") 9.5))))
 
 
+
+(ert-deftest newlines-for-vertical-centering/1-3 ()
+  (should (equal 1
+                 (zpresent--newlines-for-vertical-centering 1 3))))
+
+(ert-deftest newlines-for-vertical-centering/2-3 ()
+  (should (equal 0
+                 (zpresent--newlines-for-vertical-centering 2 3))))
+
+(ert-deftest newlines-for-vertical-centering/1-5 ()
+  (should (equal 2
+                 (zpresent--newlines-for-vertical-centering 1 5))))
+
+(ert-deftest newlines-for-vertical-centering/2-5 ()
+  (should (equal 1
+                 (zpresent--newlines-for-vertical-centering 2 5))))
+
+
 (ert-deftest pull-single-title-line/single-string ()
   (should (equal (list (list "One line, you guys!") nil)
                  (zpresent--pull-single-title-line (list "One line, you guys!")
