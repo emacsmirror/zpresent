@@ -569,8 +569,9 @@ user, so shouldn't be rearranged."
 
 (defun zpresent--newlines-for-vertical-centering (title-lines total-lines)
   "Calculate how many newlines must be inserted to vertically center a title of TITLE-LINES length in a window of TOTAL-LINES length."
-  (truncate (- total-lines title-lines)
-            2))
+  (max (truncate (- total-lines title-lines)
+                 2)
+       0))
 
 (defun zpresent--insert-title (title face)
   "Insert TITLE into the buffer with face FACE."

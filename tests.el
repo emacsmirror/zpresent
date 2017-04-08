@@ -412,6 +412,10 @@
   (should (equal 1
                  (zpresent--newlines-for-vertical-centering 2 5))))
 
+(ert-deftest newlines-for-vertical-centering/too-many-lines ()
+  (should (equal 0
+                 (zpresent--newlines-for-vertical-centering 4 1))))
+
 
 (ert-deftest pull-single-title-line/single-string ()
   (should (equal (list (list "One line, you guys!") nil)
