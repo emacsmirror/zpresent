@@ -543,10 +543,10 @@ for example, for the first slide of each top level org element."
   (switch-to-buffer "zpresentation")
   (buffer-disable-undo "zpresentation")
   (let ((inhibit-read-only t)
-        (title-lines (zpresent--get-lines-for-title (gethash 'title slide) (zpresent--calculate-window-width-in-chars 'zpresent-title-slide-title))))
+        (title-lines (zpresent--get-lines-for-title (gethash 'title slide) (window-max-chars-per-line nil 'zpresent-title-slide-title))))
     (erase-buffer)
     (insert (propertize (make-string (zpresent--newlines-for-vertical-centering (length title-lines)
-                                                                                (zpresent--calculate-window-width-in-chars 'zpresent-title-slide-title))
+                                                                                (window-max-chars-per-line nil 'zpresent-title-slide-title))
                                      ?\n)
                         'face 'zpresent-title-slide-title))
     (zpresent--insert-title (gethash 'title slide) 'zpresent-title-slide-title)
@@ -575,7 +575,7 @@ user, so shouldn't be rearranged."
 
 (defun zpresent--insert-title (title face)
   "Insert TITLE into the buffer with face FACE."
-  (let* ((chars-in-line (zpresent--calculate-window-width-in-chars face))
+  (let* ((chars-in-line (window-max-chars-per-line nil face))
          (title-lines (zpresent--get-lines-for-title title chars-in-line))
          (whitespace-for-title (zpresent--calculate-aligned-whitespace title-lines chars-in-line))
          (longest-line-length (apply #'max (mapcar #'zpresent--line-length title-lines))))
@@ -588,11 +588,6 @@ user, so shouldn't be rearranged."
                                                                         (zpresent--line-length title-line))
                                                                      ?\s))))))
         (zpresent--insert-title-line title-line face whitespace-for-this-line)))))
-
-(defun zpresent--calculate-window-width-in-chars (face)
-  "Calculate the number of characters wide the window is in face FACE."
-  (/ (window-width)
-     (face-attribute face :height nil t)))
 
 (defun zpresent--calculate-aligned-whitespace (title chars-in-line)
   "Return the whitespace for a TITLE.
