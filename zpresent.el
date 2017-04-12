@@ -162,6 +162,8 @@ Return the list of slides."
     (when (and type
                (equal "title" (string-trim (cdr type))))
       (puthash 'type 'title slide))
+    (when-let ((author (cdr (assoc "author" (gethash :properties structure)))))
+      (puthash 'author author slide))
     slide))
 
 ;;zck test how this interacts with indentation/centering, if it does
@@ -551,8 +553,10 @@ for example, for the first slide of each top level org element."
                         'face 'zpresent-title-slide-title))
     (zpresent--insert-title (gethash 'title slide) 'zpresent-title-slide-title)
 
-    ;;zck what other kind of things can get put in? date? "by"? How can I genericize this?
-    ))
+    (when-let ((author-name (gethash 'author slide)))
+      (insert (propertize (format "\nby %s" (string-trim author-name))
+                          'face
+                          'zpresent-h1)))))
 
 
 (defun zpresent--get-lines-for-title (title chars-in-line)
