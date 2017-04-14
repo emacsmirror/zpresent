@@ -548,7 +548,7 @@ for example, for the first slide of each top level org element."
         (title-lines (zpresent--get-lines-for-title (gethash 'title slide) (window-max-chars-per-line nil 'zpresent-title-slide-title))))
     (erase-buffer)
     (insert (propertize (make-string (zpresent--newlines-for-vertical-centering (length title-lines)
-                                                                                (window-max-chars-per-line nil 'zpresent-title-slide-title))
+                                                                                (zpresent--lines-in-window 'zpresent-title-slide-title))
                                      ?\n)
                         'face 'zpresent-title-slide-title))
     (zpresent--insert-title (gethash 'title slide) 'zpresent-title-slide-title)
@@ -558,6 +558,10 @@ for example, for the first slide of each top level org element."
                           'face
                           'zpresent-h1)))))
 
+(defun zpresent--lines-in-window (face &optional window)
+  "Calculate how many lines of text with face FACE can fit in WINDOW."
+  (truncate (window-body-height window t)
+            (window-font-height window face)))
 
 (defun zpresent--get-lines-for-title (title chars-in-line)
   "Gets the lines for TITLE, when presented in a line of length CHARS-IN-LINE.
