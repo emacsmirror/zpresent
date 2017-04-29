@@ -2,6 +2,13 @@
 
 zpresent.el is a package to present from within Emacs.
 
+## Installing
+
+### Melpa
+
+This can be installed through package.el from [melpa](https://melpa.org/#/zpresent), or via [use-package](https://github.com/jwiegley/use-package):
+
+    (use-package zpresent :ensure t)
 
 ## Input File
 
