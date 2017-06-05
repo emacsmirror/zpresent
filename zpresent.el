@@ -1,6 +1,6 @@
 ;;; zpresent.el --- Simple presentation mode based on org files.  -*- lexical-binding: t; -*-
 
-;; Version: 0.2
+;; Version: 0.3
 ;; This file is not part of GNU Emacs.
 
 ;; Copyright 2015-2017 Zachary Kanfer <zkanfer@gmail.com>

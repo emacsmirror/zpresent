@@ -106,3 +106,9 @@ You can move to the previous slide with `p`, `C-p`, `<left>`, or `<up>`.
 You can increase the font size with `+`, `=`, `C-+`, or `C-=`.
 
 You can decrease the font size with `-` or `C--`.
+
+## Version History
+
+### 0.3
+
+Allow for `:slide:` tags on headlines to separate slides; don't make each headline automatically a new slide.
