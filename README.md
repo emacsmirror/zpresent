@@ -14,7 +14,7 @@ This can be installed through package.el from [melpa](https://melpa.org/#/zprese
 
 ### Basics
 
-The zpresent input file is an org-mode file. Each top-level headline (that is, a line beginning with a single asterisk) is the start of a new slide. The title for that slide is the headline. Each nested item under that headline is a new row in the slide.
+The zpresent input file is an org-mode file. Each top-level headline (that is, a line beginning with a single asterisk) is the start of a new slide. The title for that slide is the headline. Each nested item under that headline is a new row in the slide. Headlines with a tag `:slide:` will be the last item in a slide, before the next headlines continue that slide. The last headline under a top-level headline is always treated as though it has a `:slide:` tag; it's optional.
 
 To present an org file, open that file, then run `#'zpresent`.
 
@@ -50,7 +50,25 @@ On the other hand, this org file:
     ** Let's start at the very beginning
     ** A very good place to start!
 
-results in three slides:
+results in _only a single_ slide:
+
+1\. Title and both child bullets
+
+```
+    zpresent.el -- a new way to present!
+    ▸ Let's start at the very beginning
+    ▸ A very good place to start!
+```
+
+### Example 2
+
+Finally, this org file:
+
+    * zpresent.el -- a new way to present!    :slide:
+    ** Let's start at the very beginning
+    ** A very good place to start!    :slide:
+
+results in two slides:
 
 1\. Title-only slide
 
@@ -59,14 +77,7 @@ results in three slides:
     zpresent.el -- a new way to present!
 ```
 
-2\. Title and first child bullet.
-
-```
-    zpresent.el -- a new way to present!
-    ▸ Let's start at the very beginning
-```
-
-3\. Title and both child bullets
+2\. Title and both child bullets
 
 ```
     zpresent.el -- a new way to present!

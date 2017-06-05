@@ -1006,22 +1006,19 @@
 
 (ert-deftest format/ordered-lists-start-at-1 ()
   (should (equal '(" 1. " "first child.")
-                 (first (gethash 'body (second (zpresent--format (org-parser-parse-string "* top\n1. first child.\n2. second child."))))))))
+                 (first (gethash 'body (first (zpresent--format (org-parser-parse-string "* top\n1. first child.\n2. second child."))))))))
 
 (ert-deftest format/ordered-list-second-item-is-2 ()
   (should (equal '(" 2. " "second child.")
-                 ;;The third slide is the only one with the second child line.
-                 ;;And each line adds another item to the body -- the first is " 1. first child.".
-                 ;;So in the /third/ slide, get the /second/ line
-                 (second (gethash 'body (third (zpresent--format (org-parser-parse-string "* top\n1. first child.\n2. second child."))))))))
+                 (second (gethash 'body (first (zpresent--format (org-parser-parse-string "* top\n1. first child.\n2. second child."))))))))
 
 (ert-deftest format/nested-ordered-lists-start-at-1 ()
   (should (equal '("   1. " "first double-nested child.")
-                 (second (gethash 'body (third (zpresent--format (org-parser-parse-string "* top\n1. first nested list.\n   1. first double-nested child.\n   2. second double-nested child."))))))))
+                 (second (gethash 'body (first (zpresent--format (org-parser-parse-string "* top\n1. first nested list.\n   1. first double-nested child.\n   2. second double-nested child."))))))))
 
 (ert-deftest format/nested-ordered-lists-second-item-is-2 ()
   (should (equal '("   2. " "second double-nested child.")
-                 (third (gethash 'body (fourth (zpresent--format (org-parser-parse-string "* top\n1. first nested list.\n   1. first double-nested child.\n   2. second double-nested child."))))))))
+                 (third (gethash 'body (fourth (zpresent--format (org-parser-parse-string "* top    :slide:\n1. first nested list.    :slide:\n   1. first double-nested child.    :slide:\n   2. second double-nested child."))))))))
 
 
 
@@ -1029,10 +1026,30 @@
   (should (equal '(("my headline"))
                  (gethash 'title (first (zpresent--format-structure (car (org-parser-parse-string "* my headline"))))))))
 
-
 (ert-deftest format-structure/single-body ()
   (should (equal '((" ▸ " "the body here"))
-                 (gethash 'body (second (zpresent--format-structure (car (org-parser-parse-string "* my headline\n** the body here"))))))))
+                 (gethash 'body (second (zpresent--format-structure (car (org-parser-parse-string "* my headline :slide:\n** the body here"))))))))
+
+(ert-deftest format-structure/goes-until-slide ()
+  (should (equal 2
+                 (length (zpresent--format-structure (car (org-parser-parse-string "* headline\n** second\n** third   :slide:\n** fourth\n** fifth")))))))
+
+
+(ert-deftest get-last-descendant/no-children ()
+  (should (equal '("top")
+                 (gethash :text
+                          (zpresent--get-last-descendant (car (org-parser-parse-string "* top")))))))
+
+(ert-deftest get-last-descendant/many-children-no-grandchildren ()
+  (should (equal '("child3")
+                 (gethash :text
+                          (zpresent--get-last-descendant (car (org-parser-parse-string "* top\n** child1\n** child2\n** child3")))))))
+
+(ert-deftest get-last-descendant/many-grandchildren ()
+  (should (equal '("grandchild33")
+                 (gethash :text
+                          (zpresent--get-last-descendant (car (org-parser-parse-string "* top\n** child1\n*** grandchild11\n** child2\n*** grandchild21\n*** grandchild22\n** child3\n*** grandchild31\n*** grandchild32\n*** grandchild33")))))))
+
 
 
 (ert-deftest find-forwards/empty-list ()
