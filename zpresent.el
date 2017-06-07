@@ -62,6 +62,7 @@
 (require 'cl-lib)
 (require 'cl-macs)
 (require 'dash)
+(require 'pcase)
 
 ;;;; Variables:
 (defvar zpresent-slides nil
@@ -221,13 +222,7 @@ The result of this is a list, containing both text and hashes.  Hashes
 indicate something other than plain text.  For example, an image."
   (cons (cons (format " %s%s "
                       (make-string (* (1- level) 2) ?\s)
-                      (cond ((equal ?* (gethash :bullet-type structure))
-                             zpresent-bullet)
-                            ((equal ?\) (gethash :bullet-type structure))
-                             (format "%d)" (1+ prior-siblings)))
-                            ((equal ?. (gethash :bullet-type structure))
-                             (format "%d." (1+ prior-siblings)))
-                            (t "")))
+                      (zpresent--format-bullet structure prior-siblings))
               (gethash :text structure))
         (let ((body (gethash :body structure))
               (body-indentation (format "%s%s"
@@ -241,6 +236,26 @@ indicate something other than plain text.  For example, an image."
           (mapcar (lambda (body-line)
                     (cons body-indentation body-line))
                   body))))
+
+(defun zpresent--get-bullet-type (structure)
+  "Get the type of bullet for STRUCTURE."
+  (let ((bullet-property (assoc "bullet-type" (gethash :properties structure))))
+    (pcase (cdr bullet-property)
+      ("*" ?*)
+      (")" ?\))
+      ("." ?.)
+      (t (gethash :bullet-type structure)))))
+
+(defun zpresent--format-bullet (structure prior-siblings)
+  "Format the bullet for STRUCTURE, not including whitespace before or after.
+
+PRIOR-SIBLINGS is the number of structures before STRUCTURE with the
+same parent.  This is used for ordered lists."
+  (case (zpresent--get-bullet-type structure)
+    (?* zpresent-bullet)
+    (?\) (format "%d)" (1+ prior-siblings)))
+    (?. (format "%d." (1+ prior-siblings)))
+    (t "")))
 
 (defun zpresent--make-slide (title &optional body)
   "Create the slide with title TITLE.

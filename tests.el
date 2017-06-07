@@ -174,6 +174,64 @@
                                       1))))
 
 
+
+(ert-deftest get-bullet-type/regular-asterisk ()
+  (should (equal ?*
+                 (zpresent--get-bullet-type (car (org-parser-parse-string "* whatever"))))))
+
+(ert-deftest get-bullet-type/regular-paren ()
+  (should (equal ?\)
+                 (zpresent--get-bullet-type (car (org-parser-parse-string "1) whatever"))))))
+
+(ert-deftest get-bullet-type/regular-period ()
+  (should (equal ?.
+                 (zpresent--get-bullet-type (car (org-parser-parse-string "1. whatever"))))))
+
+(ert-deftest get-bullet-type/asterisk-property ()
+  (should (equal ?*
+                 (zpresent--get-bullet-type (car (org-parser-parse-string "* whatever"))))))
+
+(ert-deftest get-bullet-type/paren-property ()
+  (should (equal ?\)
+                 (zpresent--get-bullet-type (car (org-parser-parse-string "* top\n:PROPERTIES:\n:bullet-type: )\n:END:"))))))
+
+(ert-deftest get-bullet-type/period-property ()
+  (should (equal ?.
+                 (zpresent--get-bullet-type (car (org-parser-parse-string "* top\n:PROPERTIES:\n:bullet-type: .\n:END:"))))))
+
+
+
+(ert-deftest format-bullet/headline ()
+  (should (equal "▸"
+                 (zpresent--format-bullet (car (org-parser-parse-string "* headline"))
+                                          0))))
+
+(ert-deftest format-bullet/paren-ordered-list ()
+  (should (equal "1)"
+                 (zpresent--format-bullet (car (org-parser-parse-string "12) headline"))
+                                          0))))
+
+(ert-deftest format-bullet/dot-ordered-list ()
+  (should (equal "12."
+                 (zpresent--format-bullet (car (org-parser-parse-string "3. headline"))
+                                          11))))
+
+(ert-deftest format-bullet/headline-property ()
+  (should (equal "▸"
+                 (zpresent--format-bullet (car (org-parser-parse-string "* headline"))
+                                          0))))
+
+(ert-deftest format-bullet/paren-ordered-list-property ()
+  (should (equal "4)"
+                 (zpresent--format-bullet (car (org-parser-parse-string "* top\n:PROPERTIES:\n:bullet-type: )\n:END:"))
+                                          3))))
+
+(ert-deftest format-bullet/dot-ordered-list-property ()
+  (should (equal "2."
+                 (zpresent--format-bullet (car (org-parser-parse-string "* top\n:PROPERTIES:\n:bullet-type: .\n:END:"))
+                                          1))))
+
+
 (ert-deftest calculate-aligned-whitespace/single-string ()
   ;;3 on left; 3 on right
   (should (equal 3
