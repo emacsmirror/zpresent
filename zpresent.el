@@ -232,6 +232,9 @@ indicate something other than plain text.  For example, an image."
         (let ((body (gethash :body structure))
               (body-indentation (format "%s%s"
                                         (make-string (* level 2) ?\s)
+
+                                        ;;bullets with asterisks are only one character
+                                        ;;wide, unlike bullets with numbers.
                                         (if (equal ?* (gethash :bullet-type structure))
                                             " "
                                           ""))))
