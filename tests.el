@@ -199,6 +199,26 @@
   (should (equal ?.
                  (zpresent--get-bullet-type (car (org-parser-parse-string "* top\n:PROPERTIES:\n:bullet-type: .\n:END:"))))))
 
+(ert-deftest get-bullet-type/no-bullet-type-parent-with-child-type ()
+  (should (equal ?.
+                 (zpresent--get-bullet-type (car (org-parser-parse-string "* whatever"))
+                                            (car (org-parser-parse-string "* top\n:PROPERTIES:\n:child-bullet-type: .\n:bullet-type: )\n:END:"))))))
+
+(ert-deftest get-bullet-type/no-bullet-type-parent-with-no-child-type ()
+  (should (equal ?*
+                 (zpresent--get-bullet-type (car (org-parser-parse-string "* whatever"))
+                                            (car (org-parser-parse-string "* top\n:PROPERTIES:\n:bullet-type: .\n:END:"))))))
+
+(ert-deftest get-bullet-type/bullet-type-parent-with-child-type ()
+  (should (equal ?.
+                 (zpresent--get-bullet-type (car (org-parser-parse-string "* top\n:PROPERTIES:\n:bullet-type: .\n:child-bullet-type: )\n:END:"))
+                                            (car (org-parser-parse-string "- top\n:PROPERTIES:\n:child-bullet-type: *\n:END:"))))))
+
+(ert-deftest get-bullet-type/bullet-type-parent-with-no-child-type ()
+  (should (equal ?\)
+                 (zpresent--get-bullet-type (car (org-parser-parse-string "* top\n:PROPERTIES:\n:bullet-type: )\n:child-bullet-type: .\n:END:"))
+                                            (car (org-parser-parse-string "- top\n:PROPERTIES:\n:bullet-type: .\n:END:"))))))
+
 
 
 (ert-deftest format-bullet/headline ()
