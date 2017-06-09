@@ -10,6 +10,14 @@ This can be installed through package.el from [melpa](https://melpa.org/#/zprese
 
     (use-package zpresent :ensure t)
 
+## Presenting with zpresent
+
+Open the file you want to present, and within it, run `M-x zpresent`.
+
+## Tutorial
+
+There's an included tutorial, which also serves as a demo. Open the file `tutorial.org`, and run `M-x zpresent` to start the tutorial.
+
 ## Input File
 
 ### Basics
@@ -90,10 +98,6 @@ results in two slides:
 Regular org-mode links (`[[http://target-here.com][text here]]`) are inserted as links in the slide, which can be clicked on with the mouse.
 
 The exception to this is if the text for a link is `zp-image`. If the text is only that, the target file will be opened, and inserted as an image. This works inline with text, or on a line by itself.
-
-## Presenting with zpresent
-
-Open the file you want to present, and within it, run `zpresent`.
 
 ### Navigating
 
