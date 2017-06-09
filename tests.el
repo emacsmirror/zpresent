@@ -66,6 +66,16 @@
     (should (equal '("Initial body." (" ▸ " "New body text."))
                    (gethash 'body new-slide)))))
 
+(ert-deftest make-following-slide/with-explicit-parent ()
+  (let* ((original-slide (zpresent--make-slide "I'm the title!" "Initial body."))
+         (new-slide (zpresent--make-following-slide original-slide
+                                                    (car (org-parser-parse-string "* New body text."))
+                                                    1
+                                                    0
+                                                    (car (org-parser-parse-string "* fake parent\n:PROPERTIES:\n:child-bullet-type: .\n:END:")))))
+    (should (equal '("Initial body." (" 1. " "New body text."))
+                   (gethash 'body new-slide)))))
+
 
 (ert-deftest extract-current-text/simple-headline ()
   (should (equal '(("simple headline"))
@@ -167,6 +177,13 @@
                                       1
                                       0))))
 
+(ert-deftest make-body/ordered-list-because-of-parent-properties ()
+  (should (equal '((" 2. " "Other stuff"))
+                 (zpresent--make-body (car (org-parser-parse-string "* Other stuff"))
+                                      1
+                                      1
+                                      (car (org-parser-parse-string "* whatever\n:PROPERTIES:\n:child-bullet-type: .\n:END:"))))))
+
 (ert-deftest make-body/ordered-list-second-item ()
   (should (equal '((" 2. " "Other stuff"))
                  (zpresent--make-body (second (gethash :children (car (org-parser-parse-string "* top\n1. First stuff\n2. Other stuff\n"))))
@@ -230,6 +247,12 @@
   (should (equal "1)"
                  (zpresent--format-bullet (car (org-parser-parse-string "12) headline"))
                                           0))))
+
+(ert-deftest format-bullet/paren-ordered-list-set-by-parent ()
+  (should (equal "12)"
+                 (zpresent--format-bullet (car (org-parser-parse-string "* headline"))
+                                          11
+                                          (car(org-parser-parse-string "* headline\n:PROPERTIES:\n:child-bullet-type: )\n:END:"))))))
 
 (ert-deftest format-bullet/dot-ordered-list ()
   (should (equal "12."
