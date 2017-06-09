@@ -246,6 +246,7 @@ indicate something other than plain text.  For example, an image."
                     (cons body-indentation body-line))
                   body))))
 
+;;when should parent-structure be optional?
 (defun zpresent--get-bullet-type (structure &optional parent-structure)
   "Get the type of bullet for STRUCTURE.
 
@@ -259,7 +260,7 @@ This will respect in order of precedence:
     (pcase (cdr bullet-property)
       ("*" ?*)
       (")" ?\))
-      ("." ?.)
+      ("." ?.) ;;zck how do I use helm to set a property with value dot? It uses a regex, so that matches anything, and it doesn't offer to put itin literally.
       (t (gethash :bullet-type structure)))))
 
 (defun zpresent--format-bullet (structure prior-siblings &optional parent-structure)
@@ -544,6 +545,8 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
     (cl-decf zpresent-position)
     (zpresent--slide (elt zpresent-slides zpresent-position))))
 
+
+;;zck this is broken! zpresent--next-match isn't a function!
 (defun zpresent--next-checkpoint-slide ()
   "Move to the next checkpoint slide.
 

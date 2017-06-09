@@ -1,0 +1,26 @@
+* zpresent tutorial!
+** Welcome to zpresent.
+** This is a way to present org files.
+*** They can be presented inside Emacs! (Yay!)
+*** But in a way that looks like traditional presentation software.
+** Now, press `n` to go to the next slide.
+* going forwards
+** You can also press `C-n`.
+* Keep moving!
+** Or `right`, or `down`.
+* back...to the future!
+** To move to the previous slide, press any of these keys:
+:PROPERTIES:
+:child-bullet-type: .
+:END:
+*** `p`
+*** `C-p`
+*** `left`
+*** `up`
+** Try those, then when you're done, go to the next slide.
+* You can also navigate to the beginning and end of the presentation
+** To the beginning with `home`
+** To the end with `end`.
+** Try going to the beginning, then coming back here.
+* End!
+** That's all! You can look at this file to see what an input file to zpresent is like.
