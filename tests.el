@@ -9,19 +9,19 @@
 ;;   (should (org-parser/hash-tables-equal #s(hash-table data (title "a title" body ("one" "two")))
 ;;                                            (car (zpresent-format-block-helper (make-hash-table)
 ;;                                                                               (make-hash-table 'title "a title"
-;;                                                                                                'body nil)
+;;                                                                                                :body nil)
 ;;                                                                               nil)))))
 
 
-(defconst required-slide-keys '(type body title checkpoint))
+(defconst required-slide-keys '(:type :body :title :checkpoint))
 
 
 (ert-deftest make-slide/title-only/check-title ()
   (should (equal "I'm the title!"
-                 (gethash 'title (zpresent--make-slide "I'm the title!")))))
+                 (gethash :title (zpresent--make-slide "I'm the title!")))))
 
 (ert-deftest make-slide/title-only/no-body ()
-  (should-not (gethash 'body (zpresent--make-slide "I'm the title!"))))
+  (should-not (gethash :body (zpresent--make-slide "I'm the title!"))))
 
 (ert-deftest make-slide/title-only/proper-things-added ()
   (let ((slide (zpresent--make-slide "I'm the title!")))
@@ -31,11 +31,20 @@
       (zpresent--hash-contains? slide key))))
 
 (ert-deftest make-slide/no-body ()
-  (should-not (gethash 'body (zpresent--make-slide "I'm the title!"))))
+  (should-not (gethash :body (zpresent--make-slide "I'm the title!"))))
 
 (ert-deftest make-slide/body ()
     (should (equal '("I'm a body")
-                 (gethash 'body (zpresent--make-slide "I'm the title!" "I'm a body")))))
+                   (gethash :body (zpresent--make-slide "I'm the title!" "I'm a body")))))
+
+
+(ert-deftest make-top-level-slide/title-has-type-title ()
+  (should (equal (gethash :type (zpresent--make-top-level-slide (car (org-parser-parse-string "* title\n:PROPERTIES:\n:type:     title\n:END:\n"))))
+                 :title)))
+
+(ert-deftest make-top-level-slide/title-has-type-normal ()
+  (should (equal (gethash :type (zpresent--make-top-level-slide (car (org-parser-parse-string "* title\n:"))))
+                 :normal)))
 
 
 (ert-deftest make-following-slide/original-slide-not-updated ()
@@ -52,19 +61,19 @@
   (let* ((original-slide (zpresent--make-slide "I'm the title!"))
          (new-slide (zpresent--make-following-slide original-slide (car (org-parser-parse-string "* New body text.")) 1 0)))
     (should (equal "I'm the title!"
-                   (gethash 'title new-slide)))))
+                   (gethash :title new-slide)))))
 
 (ert-deftest make-following-slide/check-new-body ()
   (let* ((original-slide (zpresent--make-slide "I'm the title!"))
          (new-slide (zpresent--make-following-slide original-slide (car (org-parser-parse-string "* New body text.")) 1 0)))
     (should (equal '((" ▸ " "New body text."))
-                   (gethash 'body new-slide)))))
+                   (gethash :body new-slide)))))
 
 (ert-deftest make-following-slide/check-added-body ()
   (let* ((original-slide (zpresent--make-slide "I'm the title!" "Initial body."))
          (new-slide (zpresent--make-following-slide original-slide (car (org-parser-parse-string "* New body text.")) 1 0)))
     (should (equal '("Initial body." (" ▸ " "New body text."))
-                   (gethash 'body new-slide)))))
+                   (gethash :body new-slide)))))
 
 (ert-deftest make-following-slide/with-explicit-parent ()
   (let* ((original-slide (zpresent--make-slide "I'm the title!" "Initial body."))
@@ -74,7 +83,7 @@
                                                     0
                                                     (car (org-parser-parse-string "* fake parent\n:PROPERTIES:\n:child-bullet-type: .\n:END:")))))
     (should (equal '("Initial body." (" 1. " "New body text."))
-                   (gethash 'body new-slide)))))
+                   (gethash :body new-slide)))))
 
 
 (ert-deftest extract-current-text/simple-headline ()
@@ -1107,29 +1116,29 @@
 
 (ert-deftest format/ordered-lists-start-at-1 ()
   (should (equal '(" 1. " "first child.")
-                 (first (gethash 'body (first (zpresent--format (org-parser-parse-string "* top\n1. first child.\n2. second child."))))))))
+                 (first (gethash :body (first (zpresent--format (org-parser-parse-string "* top\n1. first child.\n2. second child."))))))))
 
 (ert-deftest format/ordered-list-second-item-is-2 ()
   (should (equal '(" 2. " "second child.")
-                 (second (gethash 'body (first (zpresent--format (org-parser-parse-string "* top\n1. first child.\n2. second child."))))))))
+                 (second (gethash :body (first (zpresent--format (org-parser-parse-string "* top\n1. first child.\n2. second child."))))))))
 
 (ert-deftest format/nested-ordered-lists-start-at-1 ()
   (should (equal '("   1. " "first double-nested child.")
-                 (second (gethash 'body (first (zpresent--format (org-parser-parse-string "* top\n1. first nested list.\n   1. first double-nested child.\n   2. second double-nested child."))))))))
+                 (second (gethash :body (first (zpresent--format (org-parser-parse-string "* top\n1. first nested list.\n   1. first double-nested child.\n   2. second double-nested child."))))))))
 
 (ert-deftest format/nested-ordered-lists-second-item-is-2 ()
   (should (equal '("   2. " "second double-nested child.")
-                 (third (gethash 'body (fourth (zpresent--format (org-parser-parse-string "* top    :slide:\n1. first nested list.    :slide:\n   1. first double-nested child.    :slide:\n   2. second double-nested child."))))))))
+                 (third (gethash :body (fourth (zpresent--format (org-parser-parse-string "* top    :slide:\n1. first nested list.    :slide:\n   1. first double-nested child.    :slide:\n   2. second double-nested child."))))))))
 
 
 
 (ert-deftest format-structure/single-headline ()
   (should (equal '(("my headline"))
-                 (gethash 'title (first (zpresent--format-structure (car (org-parser-parse-string "* my headline"))))))))
+                 (gethash :title (first (zpresent--format-structure (car (org-parser-parse-string "* my headline"))))))))
 
 (ert-deftest format-structure/single-body ()
   (should (equal '((" ▸ " "the body here"))
-                 (gethash 'body (second (zpresent--format-structure (car (org-parser-parse-string "* my headline :slide:\n** the body here"))))))))
+                 (gethash :body (second (zpresent--format-structure (car (org-parser-parse-string "* my headline :slide:\n** the body here"))))))))
 
 (ert-deftest format-structure/goes-until-slide ()
   (should (equal 2
