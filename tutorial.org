@@ -22,5 +22,18 @@
 ** To the beginning with `home`
 ** To the end with `end`.
 ** Try going to the beginning, then coming back here.
+* Slides don't always show up all at once.
+** They can have multiple parts.                                      :slide:
+** And they can show up one at a time,                                :slide:
+** Or,
+** On the other hand,
+** A group can show up.
+* Different formatting
+:PROPERTIES:
+:child-bullet-type: .
+:END:
+** We can have ordered lists!
+** They can show up with periods.
+** Or with parens.
 * End!
 ** That's all! You can look at this file to see what an input file to zpresent is like.
