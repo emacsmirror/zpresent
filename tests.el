@@ -28,7 +28,7 @@
     (should (equal (length required-slide-keys)
                    (hash-table-count slide)))
     (dolist (key required-slide-keys)
-      (zpresent--hash-contains? slide key))))
+      (should (zpresent--hash-contains? slide key)))))
 
 (ert-deftest make-slide/no-body ()
   (should-not (gethash :body (zpresent--make-slide "I'm the title!"))))
