@@ -550,9 +550,9 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
 A checkpoint slide is one with the attribute :checkpoint.  It's used,
 for example, for the first slide of each top level org element."
   (interactive)
-  (let ((checkpoint-position (zpresent--next-match (lambda (slide) (gethash :checkpoint slide))
-                                                   zpresent-slides
-                                                   (1+ zpresent-position))))
+  (let ((checkpoint-position (cl-position-if (lambda (slide) (gethash :checkpoint slide))
+                                             zpresent-slides
+                                             :start (1+ zpresent-position))))
     (when checkpoint-position
       (setq zpresent-position checkpoint-position)
       (zpresent--slide (elt zpresent-slides checkpoint-position)))))
@@ -563,9 +563,10 @@ for example, for the first slide of each top level org element."
 A checkpoint slide is one with the attribute :checkpoint.  It's used,
 for example, for the first slide of each top level org element."
   (interactive)
-  (let ((checkpoint-position (zpresent--previous-match (lambda (slide) (gethash :checkpoint slide))
-                                                       zpresent-slides
-                                                       (1- zpresent-position))))
+  (let ((checkpoint-position (cl-position-if (lambda (slide) (gethash :checkpoint slide))
+                                             zpresent-slides
+                                             :end (1- zpresent-position)
+                                             :from-end)))
     (when checkpoint-position
       (setq zpresent-position checkpoint-position)
       (zpresent--slide (elt zpresent-slides checkpoint-position)))))
