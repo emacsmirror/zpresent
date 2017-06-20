@@ -602,10 +602,7 @@ for example, for the first slide of each top level org element."
     (when (gethash :title slide)
       (zpresent--insert-title (gethash :title slide) 'zpresent-h1)
       (insert "\n"))
-    (when (gethash :body slide)
-      (dolist (body-item (gethash :body slide))
-        (zpresent--insert-body-item body-item)
-        (insert "\n")))))
+    (zpresent--insert-body slide)))
 
 (defun zpresent--present-title-slide (slide)
   "Present SLIDE as a title slide."
@@ -619,6 +616,7 @@ for example, for the first slide of each top level org element."
                                      ?\n)
                         'face 'zpresent-title-slide-title))
     (zpresent--insert-title (gethash :title slide) 'zpresent-title-slide-title)
+    (zpresent--insert-body slide)
 
     (when-let ((author-name (gethash :author slide)))
       (insert (propertize (format "\nby %s" (string-trim author-name))
@@ -651,6 +649,13 @@ user, so shouldn't be rearranged."
   (max (truncate (- total-lines title-lines)
                  2)
        0))
+
+(defun zpresent--insert-body (slide)
+  "Insert the body of SLIDE into the buffer."
+  (when (gethash :body slide)
+    (dolist (body-item (gethash :body slide))
+      (zpresent--insert-body-item body-item)
+      (insert "\n"))))
 
 (defun zpresent--insert-title (title face)
   "Insert TITLE into the buffer with face FACE."
