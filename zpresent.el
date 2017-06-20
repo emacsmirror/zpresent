@@ -163,7 +163,10 @@ STRUCTURE is at indentation level LEVEL."
         (prior-siblings 0))
     (when (member "slide" (gethash :tags structure))
       (setq slides-list (append slides-list
-                                (list this-slide))))
+                                (list (copy-hash-table this-slide))))
+      (puthash :checkpoint
+               nil
+               this-slide))
     (dolist (cur-child (gethash :children structure))
       (let ((child-slide (zpresent--make-following-slide this-slide cur-child level prior-siblings structure)))
         (cl-multiple-value-bind
@@ -293,10 +296,6 @@ slide is created with an empty body."
 PRIOR-SIBLINGS is the number of structures at the same level before
 STRUCTURE with the same PARENT-STRUCTURE."
   (let ((new-slide (copy-hash-table slide)))
-
-    (puthash :checkpoint
-             nil
-             new-slide)
     (puthash :body
              (append (gethash :body slide)
                      (zpresent--make-body structure level (or prior-siblings 0) parent-structure))

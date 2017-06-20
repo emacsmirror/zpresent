@@ -1145,6 +1145,18 @@
   (should (equal 2
                  (length (zpresent--format-structure (car (org-parser-parse-string "* headline\n** second\n** third   :slide:\n** fourth\n** fifth")))))))
 
+(ert-deftest format-structure/single-headline-is-checkpoint ()
+  (should (gethash :checkpoint
+                   (first (zpresent--format-structure (car (org-parser-parse-string "* headline\n")))))))
+
+(ert-deftest format-structure/headline-with-children-is-checkpoint ()
+  (should (gethash :checkpoint
+                   (first (zpresent--format-structure (car (org-parser-parse-string "* headline\n** nested but that shouldn't matter")))))))
+
+(ert-deftest format-structure/second-slide-is-not-checkpoint ()
+  (should-not (gethash :checkpoint
+                       (second (zpresent--format-structure (car (org-parser-parse-string "* headline    :slide:\n** nested and I'm not a checkpoint")))))))
+
 
 (ert-deftest get-last-descendant/no-children ()
   (should (equal '("top")
