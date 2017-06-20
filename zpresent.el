@@ -565,7 +565,7 @@ for example, for the first slide of each top level org element."
   (let ((checkpoint-position (cl-position-if (lambda (slide) (gethash :checkpoint slide))
                                              zpresent-slides
                                              :end zpresent-position
-                                             :from-end)))
+                                             :from-end t)))
     (when checkpoint-position
       (setq zpresent-position checkpoint-position)
       (zpresent--slide (elt zpresent-slides checkpoint-position)))))
