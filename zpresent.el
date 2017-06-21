@@ -541,8 +541,6 @@ If there's a single word of length MAX-LENGTH, that word will be on a line by it
     (cl-decf zpresent-position)
     (zpresent--slide (elt zpresent-slides zpresent-position))))
 
-
-;;zck this is broken! zpresent--next-match isn't a function!
 (defun zpresent--next-checkpoint-slide ()
   "Move to the next checkpoint slide.
 
