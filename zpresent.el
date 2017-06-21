@@ -654,7 +654,7 @@ user, so shouldn't be rearranged."
   "Insert the body of SLIDE into the buffer."
   (when (gethash :body slide)
     (dolist (body-item (gethash :body slide))
-      (zpresent--insert-body-item body-item)
+      (zpresent--insert-item body-item 'zpresent-body)
       (insert "\n"))))
 
 (defun zpresent--insert-title (title face)
@@ -702,16 +702,18 @@ amount.  Otherwise, center the title-line."
       (insert (propertize precalculated-whitespace 'face face))
     (insert (propertize (zpresent--whitespace-for-centered-title-line title-line face) 'face face)))
   (dolist (title-item title-line)
-    (zpresent--insert-title-item title-item face))
+    (zpresent--insert-item title-item face))
   (insert "\n"))
 
-;;zck Is this specific to titles?
-(defun zpresent--insert-title-item (item face)
+(defun zpresent--insert-item (item face)
   "Insert ITEM into the buffer with face FACE."
   (cond ((stringp item)
          (insert (propertize item
                              'face
                              face)))
+        ((listp item)
+         (dolist (inner-item item)
+           (zpresent--insert-item inner-item face)))
         ((zpresent--item-is-image item)
          (zpresent--insert-image (gethash :target item)))
         (t (zpresent--insert-link item face))))
@@ -742,17 +744,6 @@ The whitespace calculation assumes no line will be split."
                             (truncate (- chars-in-line line-width)
                                       2))))
     (make-string chars-to-add ?\s)))
-
-(defun zpresent--insert-body-item (body-item)
-  "Insert BODY-ITEM into the buffer."
-  (cond ((stringp body-item)
-         (insert (zpresent--format-body body-item)))
-        ((listp body-item)
-         (dolist (inner-item body-item)
-           (zpresent--insert-body-item inner-item)))
-        ((zpresent--item-is-image body-item)
-         (zpresent--insert-image (gethash :target body-item)))
-        (t (zpresent--insert-link body-item 'zpresent-body))))
 
 (defun zpresent--insert-link (link-hash face)
   "Insert LINK-HASH into the buffer, as a link, with face FACE.
