@@ -99,8 +99,6 @@
 
 
 ;;;; Faces:
-;;zck make scaling function just change zpresent-base, not the faces in zpresent-faces.
-;;zck why doesn't this center properly anymore?
 (defface zpresent-base '((t . (:height 4.0))) "The base face, so we can manage changing sizes only by changing this face." :group 'zpresent-faces)
 (defface zpresent-h1 '((t . (:height 1.0 :inherit zpresent-base))) "Face for the title of a regular slide." :group 'zpresent-faces)
 (defface zpresent-title-slide-title '((t . (:height 1.5 :inherit zpresent-base))) "Face for titles in a title slide." :group 'zpresent-faces)
@@ -203,7 +201,6 @@ necessary."
       (puthash :date date slide))
     slide))
 
-;;zck test how this interacts with indentation/centering, if it does
 (defun zpresent--extract-current-text (structure)
   "Extracts the text that should go in the slide for STRUCTURE.
 
