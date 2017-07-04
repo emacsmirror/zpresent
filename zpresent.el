@@ -451,10 +451,13 @@ broken item, and the second item is the rest of the item."
 
 LINE-LIST is a list of structure items -- either strings, or hashes
 representing formatted text."
-  (if (not line-list)
-      0
-    (+ (zpresent--item-length (car line-list))
-       (zpresent--line-length (cdr line-list)))))
+  (cond ((not line-list) 0)
+        ((listp line-list)
+         (+ (zpresent--item-length (car line-list))
+            (zpresent--line-length (cdr line-list))))
+
+        ;;zck calculate the length of a block properly.
+        (t 0)))
 
 (defun zpresent--item-length (item)
   "Calculate the length of ITEM, which is a string or a formatted text hash."
@@ -696,8 +699,10 @@ amount.  Otherwise, center the title-line."
   (if precalculated-whitespace
       (insert (propertize precalculated-whitespace 'face face))
     (insert (propertize (zpresent--whitespace-for-centered-title-line title-line face) 'face face)))
-  (dolist (title-item title-line)
-    (zpresent--insert-item title-item face))
+  (if (listp title-line)
+      (dolist (title-item title-line)
+        (zpresent--insert-item title-item face))
+    (zpresent--insert-item title-line face))
   (insert "\n"))
 
 (defun zpresent--insert-item (item face)
@@ -711,7 +716,12 @@ amount.  Otherwise, center the title-line."
            (zpresent--insert-item inner-item face)))
         ((zpresent--item-is-image item)
          (zpresent--insert-image (gethash :target item)))
-        (t (zpresent--insert-link item face))))
+        ((hash-table-p item)
+         (case (gethash :type item)
+           (:link (zpresent--insert-link item face))
+           (:block (insert (propertize (gethash :body item)
+                                       'face
+                                       face)))))))
 
 (defun zpresent--item-is-image (item)
   "T if ITEM is an image."
