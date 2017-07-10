@@ -652,7 +652,14 @@ user, so shouldn't be rearranged."
   "Insert the body of SLIDE into the buffer."
   (when (gethash :body slide)
     (dolist (body-item (gethash :body slide))
-      (zpresent--insert-item body-item 'zpresent-body)
+      ;;blocks here are represented as an improper list, with the car
+      ;;being the indentation, and the cdr being the block itself.
+      (if (listp (cdr body-item))
+          (zpresent--insert-item body-item 'zpresent-body)
+
+        ;; The body item is a block, so the car is the indentation,
+        ;; and the cdr is the block.
+        (zpresent--insert-item (cdr body-item) 'zpresent-body (car body-item)))
       (insert "\n"))))
 
 (defun zpresent--insert-title (title face)
@@ -696,22 +703,27 @@ length CHARS-IN-LINE.."
 
 If PRECALCULATED-WHITESPACE is provided, pad all the lines by that
 amount.  Otherwise, center the title-line."
-  (if precalculated-whitespace
-      (insert (propertize precalculated-whitespace 'face face))
-    (insert (propertize (zpresent--whitespace-for-centered-title-line title-line face) 'face face)))
-  (if (listp title-line)
-      (dolist (title-item title-line)
-        (zpresent--insert-item title-item face))
-    (zpresent--insert-item title-line face))
+  (let ((leading-whitespace (or precalculated-whitespace (zpresent--whitespace-for-centered-title-line title-line face))))
+    (if (listp title-line)
+        (progn (insert (propertize leading-whitespace 'face face))
+               (dolist (title-item title-line)
+                 (zpresent--insert-item title-item face)))
+      (zpresent--insert-item title-line face leading-whitespace)))
   (insert "\n"))
 
-(defun zpresent--insert-item (item face)
-  "Insert ITEM into the buffer with face FACE."
+
+(defun zpresent--insert-item (item face &optional precalculated-whitespace)
+  "Insert ITEM into the buffer with face FACE.
+
+If PRECALCULATED-WHITESPACE is given, insert it at the beginning of
+each line, with the same face."
   (cond ((stringp item)
          (insert (propertize item
                              'face
                              face)))
         ((listp item)
+         (when precalculated-whitespace
+           (insert (propertize precalculated-whitespace 'face face)))
          (dolist (inner-item item)
            (zpresent--insert-item inner-item face)))
         ((zpresent--item-is-image item)
@@ -719,9 +731,14 @@ amount.  Otherwise, center the title-line."
         ((hash-table-p item)
          (case (gethash :type item)
            (:link (zpresent--insert-link item face))
-           (:block (insert (propertize (gethash :body item)
-                                       'face
-                                       face)))))))
+           (:block (message "got %s lines: %s" (length (split-string (gethash :body item) "\n")) (split-string (gethash :body item) "\n"))
+                   (dolist (line (split-string (gethash :body item) "\n"))
+                     (when precalculated-whitespace
+                       (insert (propertize precalculated-whitespace 'face face)))
+                     (insert (propertize line
+                                         'face
+                                         face))
+                     (insert "\n")))))))
 
 (defun zpresent--item-is-image (item)
   "T if ITEM is an image."

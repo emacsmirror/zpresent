@@ -199,6 +199,20 @@
                                       1
                                       1))))
 
+(ert-deftest make-body/block ()
+  (let ((body (zpresent--make-body (first (gethash :children (car (org-parser-parse-string "* whatever\n** nested -- this causes an error!\n#+BEGIN_SRC emacs-lisp\n  (format \"hi %s\"\n          \"mom\")\n#+END_SRC"))))
+                                   2
+                                   0)))
+    (should (equal 2 (length body)))
+    (should (equal '("   ▸ " "nested -- this causes an error!")
+                   (first body)))
+    (should (listp (second body)))
+    (should (equal "     " (first (second body))))
+    (let ((block (cdr (second body))))
+      (should (hash-table-p block))
+      (should (equal :block
+                     (gethash :type block))))))
+
 
 
 (ert-deftest get-bullet-type/regular-asterisk ()
