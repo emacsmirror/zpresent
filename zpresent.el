@@ -258,7 +258,7 @@ This will respect in order of precedence:
       ("*" ?*)
       (")" ?\))
       ("." ?.) ;;zck how do I use helm to set a property with value dot? It uses a regex, so that matches anything, and it doesn't offer to put itin literally.
-      (t (gethash :bullet-type structure)))))
+      (_ (gethash :bullet-type structure)))))
 
 (defun zpresent--format-bullet (structure prior-siblings &optional parent-structure)
   "Format the bullet for STRUCTURE, not including whitespace before or after.
