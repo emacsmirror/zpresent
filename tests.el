@@ -217,27 +217,33 @@
 
 (ert-deftest get-bullet-type/regular-asterisk ()
   (should (equal ?*
-                 (zpresent--get-bullet-type (car (org-parser-parse-string "* whatever"))))))
+                 (zpresent--get-bullet-type (car (org-parser-parse-string "* whatever"))
+                                            (car (org-parser-parse-string "* whatever"))))))
 
 (ert-deftest get-bullet-type/regular-paren ()
   (should (equal ?\)
-                 (zpresent--get-bullet-type (car (org-parser-parse-string "1) whatever"))))))
+                 (zpresent--get-bullet-type (car (org-parser-parse-string "1) whatever"))
+                                            (car (org-parser-parse-string "* whatever"))))))
 
 (ert-deftest get-bullet-type/regular-period ()
   (should (equal ?.
-                 (zpresent--get-bullet-type (car (org-parser-parse-string "1. whatever"))))))
+                 (zpresent--get-bullet-type (car (org-parser-parse-string "1. whatever"))
+                                            (car (org-parser-parse-string "* whatever"))))))
 
 (ert-deftest get-bullet-type/asterisk-property ()
   (should (equal ?*
-                 (zpresent--get-bullet-type (car (org-parser-parse-string "* whatever"))))))
+                 (zpresent--get-bullet-type (car (org-parser-parse-string "* whatever"))
+                                            (car (org-parser-parse-string "* whatever"))))))
 
 (ert-deftest get-bullet-type/paren-property ()
   (should (equal ?\)
-                 (zpresent--get-bullet-type (car (org-parser-parse-string "* top\n:PROPERTIES:\n:bullet-type: )\n:END:"))))))
+                 (zpresent--get-bullet-type (car (org-parser-parse-string "* top\n:PROPERTIES:\n:bullet-type: )\n:END:"))
+                                            (car (org-parser-parse-string "* whatever"))))))
 
 (ert-deftest get-bullet-type/period-property ()
   (should (equal ?.
-                 (zpresent--get-bullet-type (car (org-parser-parse-string "* top\n:PROPERTIES:\n:bullet-type: .\n:END:"))))))
+                 (zpresent--get-bullet-type (car (org-parser-parse-string "* top\n:PROPERTIES:\n:bullet-type: .\n:END:"))
+                                            (car (org-parser-parse-string "* whatever"))))))
 
 (ert-deftest get-bullet-type/no-bullet-type-parent-with-child-type ()
   (should (equal ?.
