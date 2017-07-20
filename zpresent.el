@@ -21,7 +21,7 @@
 
 ;; Homepage: https://bitbucket.org/zck/zpresent.el
 
-;; Package-Requires: ((emacs "25.1") (org-parser "0.3") (dash "2.13.0"))
+;; Package-Requires: ((emacs "25.1") (org-parser "0.3") (dash "2.13.0") (request "0.3.0"))
 
 ;; Keywords: comm
 
@@ -74,6 +74,9 @@
 (defvar zpresent-source nil
   "The original org structure for the presentation.")
 
+(defvar zpresent-images (make-hash-table :test #'equal)
+  "The images for the presentation, as a hash table.  The keys are the location, and the values are the images.")
+
 (defvar zpresent-position 0
   "The current slide position.")
 
@@ -113,6 +116,9 @@
   (setq zpresent-source (org-parser-parse-buffer (current-buffer)))
   (setq zpresent-position 0)
   (setq zpresent-slides (zpresent--format (-filter #'hash-table-p zpresent-source)))
+
+  (setq zpresent-images (make-hash-table :test #'equal))
+  (zpresent--cache-images zpresent-slides)
 
   (switch-to-buffer "zpresentation")
   (font-lock-mode 0)
@@ -748,12 +754,51 @@ each line, with the same face."
 
 (defun zpresent--insert-image (image-location)
   "Insert IMAGE-LOCATION as an image."
-  (let ((realpath (if (string-prefix-p "file:" image-location)
-                      (expand-file-name (string-remove-prefix "file:" image-location))
-                    image-location)))
 
-    ;;zck why isn't this inserting images from the internet ok? Should it?
-    (insert-image (create-image realpath))))
+  ;;zck eventually do some sort of "if the image isn't there by now,
+  ;;wait for half a second and see if it comes in."
+  (when-let (image (gethash image-location zpresent-images))
+      (insert-image image)))
+
+(defun zpresent--get-image-data (image-location)
+  "Get the image data for IMAGE-LOCATION."
+  (if (string-prefix-p "file:" image-location)
+      (create-image (expand-file-name (string-remove-prefix "file:" image-location)))))
+
+(defun zpresent--cache-images (slides)
+  "Read or download all images in SLIDES, and put them into a cache."
+  (mapc #'zpresent--cache-images-helper
+        slides))
+
+(defun zpresent--cache-images-helper (slide)
+  "Read or download all images in SLIDE, and put them into a cache."
+  (message "title is %s\nbody is %s" (gethash :title slide) (gethash :body slide))
+  (dolist (line (append (gethash :title slide)
+                        (gethash :body slide)))
+    (when (and (listp line)
+
+               ;;also check that this isn't a block. We should probably handle this better.
+               (listp (cdr line)))
+      (dolist (item line)
+        (when (zpresent--item-is-image item)
+          (zpresent--fetch-and-cache-image (gethash :target item)))))))
+
+(defun zpresent--fetch-and-cache-image (location)
+  "Cache the image from LOCATION in zpresent-images."
+  (unless (gethash location zpresent-images)
+    (if (string-prefix-p "file:" location)
+        (zpresent--cache-image (create-image (expand-file-name (string-remove-prefix "file:" location)))
+                               location)
+      (request location
+               :parser #'buffer-string
+               :success (function* (lambda (&key data &allow-other-keys)
+                                     (zpresent--cache-image (create-image (encode-coding-string data 'utf-8) nil t) location)))))))
+
+(defun zpresent--cache-image (image source-location)
+  "Cache the IMAGE, which originated at SOURCE-LOCATION."
+  (puthash source-location
+           image
+           zpresent-images))
 
 (defun zpresent--whitespace-for-centered-title-line (title-line chars-in-line)
   "Get whitespace to center TITLE-LINE in a window of width CHARS-IN-LINE.
