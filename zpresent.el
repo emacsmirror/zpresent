@@ -730,8 +730,7 @@ each line, with the same face."
         ((hash-table-p item)
          (case (gethash :type item)
            (:link (zpresent--insert-link item face))
-           (:block (message "got %s lines: %s" (length (split-string (gethash :body item) "\n")) (split-string (gethash :body item) "\n"))
-                   (dolist (line (split-string (gethash :body item) "\n"))
+           (:block (dolist (line (split-string (gethash :body item) "\n"))
                      (when precalculated-whitespace
                        (insert (propertize precalculated-whitespace 'face face)))
                      (insert (propertize line
