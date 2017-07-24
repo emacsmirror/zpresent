@@ -103,10 +103,17 @@
 
 
 ;;;; Faces:
+
+;;zck add text color, see what that does to links.
+(defface zpresent-whole-screen-face '((t . (:background "#E0E0E0"))) "Face that should be put over the whole screen.")
 (defface zpresent-base '((t . (:height 4.0))) "The base face, so we can manage changing sizes only by changing this face." :group 'zpresent-faces)
 (defface zpresent-h1 '((t . (:height 1.0 :inherit zpresent-base))) "Face for the title of a regular slide." :group 'zpresent-faces)
 (defface zpresent-title-slide-title '((t . (:height 1.5 :inherit zpresent-base))) "Face for titles in a title slide." :group 'zpresent-faces)
 (defface zpresent-body '((t . (:height 0.66 :inherit zpresent-base))) "Face for the body." :group 'zpresent-faces)
+
+(defvar zpresent-whole-screen-overlay (with-current-buffer (get-buffer-create "zpresentation") (make-overlay 0 0))
+  "The overlay that's put over all the text in the screen.  Its purpose is to color the background color, and possibly other text properties too.")
+(overlay-put zpresent-whole-screen-overlay 'face 'zpresent-whole-screen-face)
 
 ;;;; Actual code:
 ;;;###autoload
@@ -593,7 +600,14 @@ for example, for the first slide of each top level org element."
   (if (equal (gethash :type slide)
              :title)
       (zpresent--present-title-slide slide)
-    (zpresent--present-normal-slide slide)))
+    (zpresent--present-normal-slide slide))
+  (let ((inhibit-read-only t))
+    (insert (propertize (make-string (window-total-height) ?\n)
+                        'face 'zpresent-base)))
+  (move-overlay zpresent-whole-screen-overlay
+                (point-min)
+                (point-max))
+  (goto-char (point-min)))
 
 (defun zpresent--present-normal-slide (slide)
   "Present SLIDE as a normal (read: non-title) slide."
