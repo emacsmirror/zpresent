@@ -787,7 +787,6 @@ each line, with the same face."
 
 (defun zpresent--cache-images-helper (slide)
   "Read or download all images in SLIDE, and put them into a cache."
-  (message "title is %s\nbody is %s" (gethash :title slide) (gethash :body slide))
   (dolist (line (append (gethash :title slide)
                         (gethash :body slide)))
     (when (and (listp line)
