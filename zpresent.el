@@ -66,6 +66,7 @@
 (require 'cl-macs)
 (require 'dash)
 (require 'pcase)
+(require 'request)
 
 ;;;; Variables:
 (defvar zpresent-slides nil
