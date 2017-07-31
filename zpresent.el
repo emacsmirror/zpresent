@@ -746,7 +746,7 @@ each line, with the same face."
          (dolist (inner-item item)
            (zpresent--insert-item inner-item face)))
         ((zpresent--item-is-image item)
-         (zpresent--insert-image (gethash :target item)))
+         (zpresent--insert-image (gethash :target item) t))
         ((hash-table-p item)
          (case (gethash :type item)
            (:link (zpresent--insert-link item face))
@@ -766,13 +766,16 @@ each line, with the same face."
        (equal "zp-image"
               (gethash :text item))))
 
-(defun zpresent--insert-image (image-location)
-  "Insert IMAGE-LOCATION as an image."
+(defun zpresent--insert-image (image-location try-to-wait-for-image)
+  "Insert IMAGE-LOCATION as an image.
 
-  ;;zck eventually do some sort of "if the image isn't there by now,
-  ;;wait for half a second and see if it comes in."
-  (when-let (image (gethash image-location zpresent-images))
-      (insert-image image)))
+If TRY-TO-WAIT-FOR-IMAGE is t, wait a second to see if the image comes
+in.  This is intended for use when a download is in progress."
+  (if-let (image (gethash image-location zpresent-images))
+      (insert-image image)
+    (when try-to-wait-for-image
+      (sleep-for 1)
+      (zpresent--insert-image image-location nil))))
 
 (defun zpresent--get-image-data (image-location)
   "Get the image data for IMAGE-LOCATION."
