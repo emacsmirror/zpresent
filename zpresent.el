@@ -21,7 +21,7 @@
 
 ;; Homepage: https://bitbucket.org/zck/zpresent.el
 
-;; Package-Requires: ((emacs "25.1") (org-parser "0.3") (dash "2.13.0") (request "0.3.0"))
+;; Package-Requires: ((emacs "25.1") (org-parser "0.3") (dash "2.12.0") (request "0.3.0"))
 
 ;; Keywords: comm
 
