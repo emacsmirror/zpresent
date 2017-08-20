@@ -4,7 +4,7 @@ zpresent.el is a package to present from within Emacs. The presentations are bas
 
 The presentations look like this:
 
-![zpresent sample image](http://i.imgur.com/x2RFo2e.jpg)
+![zpresent sample image](http://imgur.com/stENNeV.jpg)
 
 ## Installing
 
