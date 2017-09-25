@@ -190,7 +190,7 @@ STRUCTURE is at indentation level LEVEL."
                         child-slide-list))
           (setq this-slide child-last-slide)))
       (cl-incf prior-siblings))
-    (values slides-list this-slide)))
+    (list slides-list this-slide)))
 
 (defun zpresent--get-last-descendant (structure)
   "Get the last descendant of STRUCTURE.
@@ -280,7 +280,7 @@ same parent.  This is used for ordered lists.
 
 PARENT-STRUCTURE is the parent structure of STRUCTURE.  It's used to
 inherit properties."
-  (case (zpresent--get-bullet-type structure parent-structure)
+  (cl-case (zpresent--get-bullet-type structure parent-structure)
     (?* zpresent-bullet)
     (?\) (format "%d)" (1+ prior-siblings)))
     (?. (format "%d." (1+ prior-siblings)))
@@ -748,7 +748,7 @@ each line, with the same face."
         ((zpresent--item-is-image item)
          (zpresent--insert-image (gethash :target item) t))
         ((hash-table-p item)
-         (case (gethash :type item)
+         (cl-case (gethash :type item)
            (:link (zpresent--insert-link item face))
            (:block (dolist (line (split-string (gethash :body item) "\n"))
                      (when precalculated-whitespace
@@ -807,7 +807,7 @@ in.  This is intended for use when a download is in progress."
                                location)
       (request location
                :parser #'buffer-string
-               :success (function* (lambda (&key data &allow-other-keys)
+               :success (cl-function (lambda (&key data &allow-other-keys)
                                      (zpresent--cache-image (create-image (encode-coding-string data 'utf-8) nil t) location)))))))
 
 (defun zpresent--cache-image (image source-location)

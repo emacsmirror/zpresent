@@ -1,6 +1,10 @@
 # zpresent.el #
 
-zpresent.el is a package to present from within Emacs.
+zpresent.el is a package to present from within Emacs. The presentations are based on org files.
+
+The presentations look like this:
+
+![zpresent sample image](http://imgur.com/stENNeV.jpg)
 
 ## Installing
 
