@@ -137,6 +137,8 @@
   (when zpresent-delete-other-windows
     (delete-other-windows))
 
+  (setq cursor-type nil)
+
   (visual-line-mode)
 
   (zpresent--redisplay))
