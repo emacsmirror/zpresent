@@ -598,10 +598,10 @@ for example, for the first slide of each top level org element."
 
 (defun zpresent--slide (slide)
   "Present SLIDE."
-  (if (equal (gethash :type slide)
-             :title)
-      (zpresent--present-title-slide slide)
-    (zpresent--present-normal-slide slide))
+  (cl-case (gethash :type slide)
+    (:full-screen-image (zpresent--present-full-screen-image slide))
+    (:title (zpresent--present-title-slide slide))
+    (otherwise (zpresent--present-normal-slide slide)))
   (let ((inhibit-read-only t))
     (insert (propertize (make-string (window-total-height) ?\n)
                         'face 'zpresent-base)))
@@ -645,6 +645,16 @@ for example, for the first slide of each top level org element."
       (insert (propertize (format "\n%s" (string-trim date))
                           'face
                           'zpresent-h1)))))
+
+(defun zpresent--present-full-screen-image (slide)
+  "Present SLIDE as a full screen image."
+  (switch-to-buffer "zpresentation")
+  (buffer-disable-undo "zpresentation")
+  (let ((inhibit-read-only t))
+    (erase-buffer)
+    (insert "full image!")
+    (message (hash-table-keys slide))
+    (insert "done")))
 
 (defun zpresent--lines-in-window (face &optional window)
   "Calculate how many lines of text with face FACE can fit in WINDOW."
