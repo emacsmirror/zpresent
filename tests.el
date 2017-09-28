@@ -1329,6 +1329,10 @@
 
 
 
+(ert-deftest make-keyword/returns-proper-keyword ()
+  (should (equal (zpresent--make-keyword "pants")
+                 :pants)))
+
 
 
 ;;; tests.el ends here

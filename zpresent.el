@@ -906,6 +906,13 @@ If you want to insert an image, use '#'zpresent--insert-image'."
                 unique-key))))
 
 
+(defun zpresent--make-keyword (name)
+  "Make a keyword from NAME.
+
+Given \"pants\", returns a keyword that's equal to :pants."
+  (intern (format ":%s" name)))
+
+
 (provide 'zpresent)
 
 ;;; zpresent.el ends here
