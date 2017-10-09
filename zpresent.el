@@ -207,9 +207,9 @@ necessary."
   "Make a top level slide from STRUCTURE."
   (let ((slide (zpresent--make-slide (zpresent--extract-current-text structure)))
         (type (assoc "type" (gethash :properties structure))))
-    (when (and type
-               (equal "title" (string-trim (cdr type))))
-      (puthash :type :title slide))
+    (when type
+      (puthash :type (zpresent--make-keyword (string-trim (cdr type))) slide))
+    (puthash :properties (gethash :properties structure) slide)
     (when-let ((author (cdr (assoc "author" (gethash :properties structure)))))
       (puthash :author author slide))
     (when-let ((date (cdr (assoc "date" (gethash :properties structure)))))
@@ -652,9 +652,10 @@ for example, for the first slide of each top level org element."
   (buffer-disable-undo "zpresentation")
   (let ((inhibit-read-only t))
     (erase-buffer)
-    (insert "full image!")
-    (message (hash-table-keys slide))
-    (insert "done")))
+    (when-let* ((image-location (alist-get "image" (gethash :properties slide) nil nil #'equal))
+                (image (zpresent--get-image-from-cache image-location 1)))
+      (insert-image (append image (list :width (window-body-width nil t)
+                                        :height (window-body-height nil t)))))))
 
 (defun zpresent--lines-in-window (face &optional window)
   "Calculate how many lines of text with face FACE can fit in WINDOW."
@@ -758,7 +759,7 @@ each line, with the same face."
          (dolist (inner-item item)
            (zpresent--insert-item inner-item face)))
         ((zpresent--item-is-image item)
-         (zpresent--insert-image (gethash :target item) t))
+         (zpresent--insert-image (gethash :target item)))
         ((hash-table-p item)
          (cl-case (gethash :type item)
            (:link (zpresent--insert-link item face))
@@ -778,16 +779,25 @@ each line, with the same face."
        (equal "zp-image"
               (gethash :text item))))
 
-(defun zpresent--insert-image (image-location try-to-wait-for-image)
-  "Insert IMAGE-LOCATION as an image.
+(defun zpresent--get-image-from-cache (image-location wait-if-not-found)
+  "Get the image from IMAGE-LOCATION from the cache.
 
-If TRY-TO-WAIT-FOR-IMAGE is t, wait a second to see if the image comes
-in.  This is intended for use when a download is in progress."
+If it's not there, wait a maximum of WAIT-IF-NOT-FOUND seconds for the
+image to come in.  This is intended for use when a download is in
+progress."
   (if-let (image (gethash image-location zpresent-images))
-      (insert-image image)
-    (when try-to-wait-for-image
-      (sleep-for 1)
-      (zpresent--insert-image image-location nil))))
+      image
+    (when (and wait-if-not-found
+               (> wait-if-not-found 0))
+      (sleep-for 0 100)
+      (zpresent--get-image-from-cache image-location
+                                      (- wait-if-not-found 0.1)))))
+
+(defun zpresent--insert-image (image-location)
+  "Insert IMAGE-LOCATION as an image."
+  (when-let ((image (zpresent--get-image-from-cache image-location 1)))
+    (message "found the image!")
+    (insert-image image)))
 
 (defun zpresent--get-image-data (image-location)
   "Get the image data for IMAGE-LOCATION."
@@ -801,6 +811,8 @@ in.  This is intended for use when a download is in progress."
 
 (defun zpresent--cache-images-helper (slide)
   "Read or download all images in SLIDE, and put them into a cache."
+  (when-let* ((image-in-properties (alist-get "image" (gethash :properties slide) nil nil #'equal)))
+    (zpresent--fetch-and-cache-image image-in-properties))
   (dolist (line (append (gethash :title slide)
                         (gethash :body slide)))
     (when (and (listp line)
@@ -815,12 +827,12 @@ in.  This is intended for use when a download is in progress."
   "Cache the image from LOCATION in zpresent-images."
   (unless (gethash location zpresent-images)
     (if (string-prefix-p "file:" location)
-        (zpresent--cache-image (create-image (expand-file-name (string-remove-prefix "file:" location)))
+        (zpresent--cache-image (create-image (expand-file-name (string-remove-prefix "file:" location)) 'imagemagick)
                                location)
       (request location
                :parser #'buffer-string
                :success (cl-function (lambda (&key data &allow-other-keys)
-                                     (zpresent--cache-image (create-image (encode-coding-string data 'utf-8) nil t) location)))))))
+                                     (zpresent--cache-image (create-image (encode-coding-string data 'utf-8) 'imagemagick t) location)))))))
 
 (defun zpresent--cache-image (image source-location)
   "Cache the IMAGE, which originated at SOURCE-LOCATION."
