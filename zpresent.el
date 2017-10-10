@@ -796,7 +796,6 @@ progress."
 (defun zpresent--insert-image (image-location)
   "Insert IMAGE-LOCATION as an image."
   (when-let ((image (zpresent--get-image-from-cache image-location 1)))
-    (message "found the image!")
     (insert-image image)))
 
 (defun zpresent--get-image-data (image-location)
