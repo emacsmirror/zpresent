@@ -103,6 +103,18 @@ Regular org-mode links (`[[http://target-here.com][text here]]`) are inserted as
 
 The exception to this is if the text for a link is `zp-image`. If the text is only that, the target file will be opened, and inserted as an image. This works inline with text, or on a line by itself.
 
+### Full-screen images
+
+An image can be presented as a slide, with no text in it. Do this by creating a top-level slide, with two properties. The `type` property must be set to `full-screen-image`. The `image` property must be the address of the image. For example:
+
+```
+* This slide will display the image fullscreen, and will have no text.
+:PROPERTIES:
+:type:     full-screen-image
+:image:    file:~/Pictures/giant-waterfall.jpg
+:END:
+```
+
 ### Navigating
 
 You can move to the next slide with `n`, `C-n`, `<right>`, or `<down>`
