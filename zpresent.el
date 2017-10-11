@@ -101,10 +101,12 @@
 (defvar zpresent-align-title 'left
   "How to align lines in the title.  Possible values are 'left, 'right, 'center.")
 
+(defvar zpresent-default-background-color "#E0E0E0"
+  "The default color placed over all fonts in the background.")
 
 ;;;; Faces:
 
-(defface zpresent-whole-screen-face '((t . (:background "#E0E0E0"))) "Face that should be put over the whole screen.")
+(defface zpresent-whole-screen-face `((t . (:background ,zpresent-default-background-color))) "Face that should be put over the whole screen.")
 (defface zpresent-base '((t . (:height 4.0 :foreground "#000000"))) "The base face, so we can manage changing sizes only by changing this face." :group 'zpresent-faces)
 (defface zpresent-h1 '((t . (:height 1.0 :inherit zpresent-base))) "Face for the title of a regular slide." :group 'zpresent-faces)
 (defface zpresent-title-slide-title '((t . (:height 1.5 :inherit zpresent-base))) "Face for titles in a title slide." :group 'zpresent-faces)
@@ -605,6 +607,11 @@ for example, for the first slide of each top level org element."
   (let ((inhibit-read-only t))
     (insert (propertize (make-string (window-total-height) ?\n)
                         'face 'zpresent-base)))
+  (face-spec-set 'zpresent-whole-screen-face
+                 `((t . (:background
+                         ,(if-let ((background-color (alist-get "background-color" (gethash :properties slide) nil nil #'equal)))
+                              background-color
+                            zpresent-default-background-color)))))
   (move-overlay zpresent-whole-screen-overlay
                 (point-min)
                 (point-max))
