@@ -299,6 +299,7 @@ slide is created with an empty body."
     (puthash :checkpoint t slide)
     (puthash :title title slide)
     (puthash :body (if body (list body) nil) slide)
+    (puthash :properties '() slide)
 
     (puthash :type :normal slide)
     slide))

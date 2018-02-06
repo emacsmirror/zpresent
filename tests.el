@@ -13,7 +13,7 @@
 ;;                                                                               nil)))))
 
 
-(defconst required-slide-keys '(:type :body :title :checkpoint))
+(defconst required-slide-keys '(:type :properties :body :title :checkpoint))
 
 
 (ert-deftest make-slide/title-only/check-title ()
