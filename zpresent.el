@@ -863,7 +863,8 @@ The whitespace calculation assumes no line will be split."
 If you want to insert an image, use '#'zpresent--insert-image'."
   (insert-button (propertize (gethash :text link-hash)
                              'face face)
-                 'action `(lambda (button) (browse-url ,(gethash :target link-hash)))))
+                 'action `(lambda (button) (browse-url ,(gethash :target link-hash)))
+                 'follow-link t))
 
 
 
