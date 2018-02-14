@@ -276,6 +276,7 @@ This will respect in order of precedence:
       ("*" ?*)
       (")" ?\))
       ("." ?.)
+      ("none" ?\s)
       (_ (gethash :bullet-type structure)))))
 
 (defun zpresent--format-bullet (structure prior-siblings &optional parent-structure)
@@ -611,6 +612,7 @@ for example, for the first slide of each top level org element."
     (insert (propertize (make-string (window-total-height) ?\n)
                         'face 'zpresent-base)))
   (face-spec-set 'zpresent-whole-screen-face
+                 ;;we don't get the new properties from the children!
                  `((t . (:background
                          ,(if-let ((background-color (alist-get "background-color" (gethash :properties slide) nil nil #'equal)))
                               background-color
