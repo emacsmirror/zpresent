@@ -19,7 +19,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-;; Homepage: https://bitbucket.org/zck/zpresent.el
+;; Homepage: https://hg.sr.ht/~zck/zpresent
 
 ;; Package-Requires: ((emacs "25.1") (org-parser "0.4") (dash "2.12.0") (request "0.3.0"))
 
@@ -30,6 +30,8 @@
 
 ;; This package enables presenting org files inside Emacs in a form
 ;; that's like "traditional" presentation software.
+
+;; Its source repository is https://hg.sr.ht/~zck/zpresent .
 
 ;; A tutorial can be accessed by opening `tutorial.org`, then running
 ;; `M-x zpresent`.
