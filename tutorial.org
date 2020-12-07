@@ -35,5 +35,11 @@
 ** We can have ordered lists!
 ** They can show up with periods.
 ** Or with parens.
+* Even title slides!
+:PROPERTIES:
+:type:     title
+:author:   the author
+:date:     today
+:END:
 * End!
 ** That's all! You can look at this file to see what an input file to zpresent is like.
