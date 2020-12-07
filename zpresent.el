@@ -854,12 +854,13 @@ progress."
   "Cache the image from LOCATION in zpresent-images."
   (unless (gethash location zpresent-images)
     (if (string-prefix-p "file:" location)
-        (zpresent--cache-image (create-image (expand-file-name (string-remove-prefix "file:" location)) 'imagemagick)
+        (zpresent--cache-image (create-image (expand-file-name (string-remove-prefix "file:" location)))
                                location)
       (request location
                :parser #'buffer-string
                :success (cl-function (lambda (&key data &allow-other-keys)
-                                     (zpresent--cache-image (create-image (encode-coding-string data 'utf-8) 'imagemagick t) location)))))))
+                                       (zpresent--cache-image (create-image (encode-coding-string data 'utf-8) nil t)
+                                                              location)))))))
 
 (defun zpresent--cache-image (image source-location)
   "Cache the IMAGE, which originated at SOURCE-LOCATION."
